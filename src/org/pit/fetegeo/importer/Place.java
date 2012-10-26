@@ -1,4 +1,4 @@
-package org.test;
+package org.pit.fetegeo.importer;
 
 import java.util.List;
 

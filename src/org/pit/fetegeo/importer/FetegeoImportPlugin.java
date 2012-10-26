@@ -4,7 +4,7 @@
  * Time: 2:26 PM
  */
 
-package org.test;
+package org.pit.fetegeo.importer;
 
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManagerFactory;
 import org.openstreetmap.osmosis.core.plugin.PluginLoader;

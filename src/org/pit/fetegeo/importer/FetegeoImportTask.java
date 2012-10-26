@@ -3,7 +3,7 @@
  * Date: 10/22/12
  * Time: 2:26 PM
  */
-package org.test;
+package org.pit.fetegeo.importer;
 
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
