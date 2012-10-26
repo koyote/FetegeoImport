@@ -12,6 +12,7 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 public class FetegeoImportTask implements Sink {
@@ -64,18 +65,33 @@ public class FetegeoImportTask implements Sink {
     locationProcessor.process(entity);
 
     // Process tags
-    Place place = tagProcessor.processTags(entity);
+    List<GenericTag> tagList = tagProcessor.processTags(entity);
 
     // Write to place file
-    writePlace(place);
+    if (tagList != null) {
+      for (GenericTag tag : tagList) {
+        write(tag);
+      }
+    }
+  }
+
+  private void write(GenericTag tag) {
+    if (tag instanceof Place) {
+      writePlace((Place) tag);
+    } else if (tag instanceof Address) {
+
+    } else if (tag instanceof Highway) {
+
+    }
 
   }
 
   private void writePlace(Place place) {
     if (place == null) return;
+
     placeWriter.writeField(placeId);
     placeWriter.writeField(place.getId());
-    placeWriter.writeField(place.getPlaceType());
+    placeWriter.writeField(place.getType());
     placeWriter.writeField(place.getPopulation());
     placeWriter.writeField(locationProcessor.findLocation(place.getId()));
 

@@ -18,16 +18,13 @@ import java.util.Map;
  */
 public class LocationProcessor {
 
-
   private Map<Long, Point> nodeMap;
   private Map<Long, Polygon> wayMap;
-
 
   private PointBuilder pointBuilder;
   private PolygonBuilder polygonBuilder;
 
   public LocationProcessor() {
-
     pointBuilder = new PointBuilder();
     polygonBuilder = new PolygonBuilder();
     nodeMap = new HashMap<Long, Point>();
