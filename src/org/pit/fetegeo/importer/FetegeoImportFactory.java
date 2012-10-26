@@ -19,7 +19,6 @@ public class FetegeoImportFactory extends TaskManagerFactory {
 
   @Override
   protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
-    System.out.println("IMPORTING A factory");
 
     // Get args
     String outDirName = getStringArgument(taskConfig, ARG_NAME, getDefaultStringArgument(taskConfig, DEFAULT_DIR));

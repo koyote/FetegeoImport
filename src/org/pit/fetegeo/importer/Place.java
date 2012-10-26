@@ -32,7 +32,7 @@ public class Place {
   }
 
   public Long getPopulation() {
-    return population == null ? 0l : population;
+    return population == null ? -1l : population;
   }
 
   public void setPopulation(Long population) {
