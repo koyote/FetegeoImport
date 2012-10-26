@@ -9,7 +9,6 @@ public class Address extends GenericTag {
 
   private String street;
   private String housenumber;
-  private String postcode;
 
   public String getStreet() {
     return street;
@@ -27,12 +26,7 @@ public class Address extends GenericTag {
     this.housenumber = housenumber;
   }
 
-  public String getPostcode() {
-    return postcode;
+  public String print() {
+    return housenumber + " " + street;
   }
-
-  public void setPostcode(String postcode) {
-    this.postcode = postcode;
-  }
-
 }

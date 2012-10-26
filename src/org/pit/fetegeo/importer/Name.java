@@ -10,10 +10,18 @@ public class Name {
   private Long id;
   private String nameType;
   private String name;
+  private String language;
 
   public Name(String name, String nameType) {
     this.name = name;
     this.nameType = nameType;
+
+    // Set language
+    if (nameType.startsWith("name:")) {
+      String[] nameToken = nameType.split(":");
+      setLanguage(nameToken[1]);
+      setNameType("name");
+    }
   }
 
   public Long getId() {
@@ -39,4 +47,14 @@ public class Name {
   public void setName(String name) {
     this.name = name;
   }
+
+  public String getLanguage() {
+    return language;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
+  }
+
+
 }

@@ -17,14 +17,12 @@ import java.util.Map;
 
 public class FetegeoImportTask implements Sink {
 
-
   private LocationProcessor locationProcessor;
   private TagProcessor tagProcessor;
 
   private CompletableContainer container;
   private CopyFileWriter addressWriter;            // having separate address table makes searching faster
   private CopyFileWriter addressNameWriter;
-  private CopyFileWriter langWriter;
   private CopyFileWriter placeWriter;
   private CopyFileWriter placeNameWriter;
   private CopyFileWriter postcodeWriter;
@@ -34,7 +32,6 @@ public class FetegeoImportTask implements Sink {
   private Long placeNameId = 0l;
   private Long addressId = 0l;
   private Long addressNameId = 0l;
-  private Long postcodeId = 0l;
 
 
   public FetegeoImportTask(final File outdir) {
@@ -49,7 +46,6 @@ public class FetegeoImportTask implements Sink {
 
     addressWriter = container.add(new CopyFileWriter(new File(outPath, "address.txt")));
     addressNameWriter = container.add(new CopyFileWriter(new File(outPath, "address_name.txt")));
-    langWriter = container.add(new CopyFileWriter(new File(outPath, "lang.txt")));
     placeWriter = container.add(new CopyFileWriter(new File(outPath, "place.txt")));
     placeNameWriter = container.add(new CopyFileWriter(new File(outPath, "place_name.txt")));
     postcodeWriter = container.add(new CopyFileWriter(new File(outPath, "postcode.txt")));
@@ -78,14 +74,13 @@ public class FetegeoImportTask implements Sink {
   private void write(GenericTag tag) {
     if (tag instanceof Place) {
       writePlace((Place) tag);
-    } else if (tag instanceof Address) {
-
-    } else if (tag instanceof Highway) {
-
+    } else if (tag instanceof Address || tag instanceof Highway) {
+      writeRoad(tag);
     }
 
   }
 
+  // TODO: name language; get rid of duplicate code (implement write() inside GenericTag?)
   private void writePlace(Place place) {
     if (place == null) return;
 
@@ -104,6 +99,34 @@ public class FetegeoImportTask implements Sink {
     }
     placeId++;
     placeWriter.endRecord();
+  }
+
+  private void writeRoad(GenericTag tag) {
+    if (tag == null) return;
+
+    addressWriter.writeField(addressId);
+    addressWriter.writeField(tag.getId());
+    addressWriter.writeField(tag.getType());
+    addressWriter.writeField(locationProcessor.findLocation(tag.getId()));
+
+    if (tag.getNameList() != null) {  // "addr" will be null here
+      for (Name name : tag.getNameList()) {
+        addressNameWriter.writeField(addressNameId++);
+        addressNameWriter.writeField(addressId);
+        addressNameWriter.writeField(name.getNameType());
+        addressNameWriter.writeField(name.getName());
+        addressNameWriter.endRecord();
+      }
+    } else { // for "addr" tags
+      addressNameWriter.writeField(addressNameId++);
+      addressNameWriter.writeField(addressId);
+      addressNameWriter.writeField("name");
+      addressNameWriter.writeField(((Address) tag).print());
+      addressNameWriter.endRecord();
+    }
+    addressId++;
+    addressWriter.endRecord();
+
   }
 
   @Override

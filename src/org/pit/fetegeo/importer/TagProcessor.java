@@ -34,48 +34,50 @@ public class TagProcessor {
 
   private List<GenericTag> processPlace(Entity entity) {
     List<GenericTag> tags = new ArrayList<GenericTag>();
-
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("place")) {
         place.setType(tag.getValue());
         place.setId(entity.getId());
-      } else if (key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
-        nameList.add(new Name(key, value));
+      } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
+        nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
       }
-      // TODO: place_numbers; postal_code, is_in
+      // TODO: is_in
     }
     place.setNameList(nameList);
 
     tags.add(place);
+
     return tags;
   }
 
   private List<GenericTag> processHighway(Entity entity) {
     List<GenericTag> tags = new ArrayList<GenericTag>();
-
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("highway")) {
         highway.setType(value);
         highway.setId(entity.getId());
-      } else if (key.endsWith("name")) {
-        nameList.add(new Name(key, value));
+      } else if (key.startsWith("name:") || key.endsWith("name")) {
+        nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("ref")) {
         highway.setRef(value);
       }
     }
-    // TODO: postal_code, is_in
+
+    // TODO: is_in
 
     // We don't want highways without names
     if (nameList.isEmpty() && highway.getRef() == null) {
@@ -91,27 +93,28 @@ public class TagProcessor {
   private List<GenericTag> processAddress(Entity entity) {
     List<GenericTag> tags = new ArrayList<GenericTag>();
     Address address = new Address();
-
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
+      address.setType("addr");
       if (key.startsWith("addr")) {
         String addressType = key.split(":")[1];
         address.setId(entity.getId());
         if (addressType.equalsIgnoreCase("housenumber")) {
           address.setHousenumber(value);
-        } else if (addressType.equalsIgnoreCase("postcode")) {
-          address.setPostcode(value);
         } else if (addressType.equalsIgnoreCase("street")) {
           address.setStreet(value);
         }
-        // TODO: city, country (lookup??)
-      } else if (key.endsWith("name")) {
-        nameList.add(new Name(key, value));
+      } else if (key.startsWith("name:") || key.endsWith("name")) {
+        nameList.add(new Name(value, key));
       }
     }
+
+    // TODO: city, country (lookup??)
+
     address.setNameList(nameList);
 
     tags.add(address);
