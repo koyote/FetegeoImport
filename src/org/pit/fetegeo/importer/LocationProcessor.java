@@ -72,22 +72,6 @@ public class LocationProcessor {
   }
 
   private void process(Relation relation) {
-    boolean road = false;
-    boolean boundary = false;
-    for (Tag tag : relation.getTags()) {
-      if (tag.getKey().equalsIgnoreCase("route") && tag.getValue().equalsIgnoreCase("road")) {
-        road = true;
-      }
-
-      // We don't care about non-official boundaries
-      if (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative")) {
-        boundary = true;
-      }
-    }
-
-    // We only process roads and boundaries
-    if (!road && !boundary) return;
-
     List<Polygon> coordinateList = new ArrayList<Polygon>();
     fetchRelationCoors(relation, coordinateList);
     Polygon[] polyArray = coordinateList.toArray(new Polygon[coordinateList.size()]);

@@ -19,10 +19,10 @@ public class TagProcessor {
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
-      if (key.equalsIgnoreCase("place")) {
+      if (key.equalsIgnoreCase("place") || (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative"))) {
         return processPlace(entity);
       }
-      if (key.equalsIgnoreCase("highway")) {
+      if (key.equalsIgnoreCase("highway") || (tag.getKey().equalsIgnoreCase("route") && tag.getValue().equalsIgnoreCase("road"))) {
         return processHighway(entity);
       }
       if (key.startsWith("addr")) {
@@ -37,13 +37,16 @@ public class TagProcessor {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+    place.setId(entity.getId());
+
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("place")) {
         place.setType(tag.getValue());
-        place.setId(entity.getId());
+      } else if (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative")) {
+        place.setType("boundary");
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
@@ -63,13 +66,13 @@ public class TagProcessor {
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+    highway.setId(entity.getId());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("highway")) {
         highway.setType(value);
-        highway.setId(entity.getId());
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("ref")) {
@@ -95,14 +98,15 @@ public class TagProcessor {
     Address address = new Address();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+    address.setId(entity.getId());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       address.setType("addr");
+
       if (key.startsWith("addr")) {
         String addressType = key.split(":")[1];
-        address.setId(entity.getId());
         if (addressType.equalsIgnoreCase("housenumber")) {
           address.setHousenumber(value);
         } else if (addressType.equalsIgnoreCase("street")) {
@@ -120,6 +124,10 @@ public class TagProcessor {
     tags.add(address);
 
     return tags;
+  }
+
+  private List<GenericTag> processBoundary(Entity entity) {
+    return null;
   }
 
 }
