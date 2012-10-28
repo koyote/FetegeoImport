@@ -15,7 +15,7 @@ import java.io.File;
 public class FetegeoImportFactory extends TaskManagerFactory {
 
   private static final String ARG_NAME = "outdir";
-  private static final String DEFAULT_DIR = "/tmp/fetegeo_output";
+  private static final String DEFAULT_DIR = System.getProperty("user.dir"); // assume current directory to be the default
 
   @Override
   protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -23,6 +23,7 @@ public class FetegeoImportFactory extends TaskManagerFactory {
     // Get args
     String outDirName = getStringArgument(taskConfig, ARG_NAME, getDefaultStringArgument(taskConfig, DEFAULT_DIR));
     File outDir = new File(outDirName);
+
     if (!outDir.isDirectory()) {
       throw new IllegalArgumentException(outDirName + " is not a directory or does not exist");
     }

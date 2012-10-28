@@ -27,7 +27,6 @@ public class FetegeoImportTask implements Sink {
   private CopyFileWriter placeNameWriter;
   private CopyFileWriter postcodeWriter;
 
-
   private Long placeId = 0l;
   private Long placeNameId = 0l;
   private Long addressId = 0l;
@@ -37,7 +36,7 @@ public class FetegeoImportTask implements Sink {
   public FetegeoImportTask(final File outdir) {
 
     String outPath = outdir.getAbsolutePath();
-    System.out.println("The Output dir is: " + outPath);
+    System.out.println("The Output directory is: " + outPath);
 
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
@@ -135,6 +134,7 @@ public class FetegeoImportTask implements Sink {
 
   @Override
   public void complete() {
+    locationProcessor.printSize();
     container.complete();
   }
 
