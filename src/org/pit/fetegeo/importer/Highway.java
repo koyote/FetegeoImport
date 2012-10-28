@@ -1,5 +1,7 @@
 package org.pit.fetegeo.importer;
 
+import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+
 /**
  * Author: Pit Apps
  * Date: 10/26/12
@@ -17,4 +19,22 @@ public class Highway extends GenericTag {
     this.ref = ref;
   }
 
+
+  public void write(CopyFileWriter addressWriter, CopyFileWriter nameWriter) {
+    addressWriter.writeField(Address.addressId);
+
+    super.write(addressWriter, nameWriter);
+
+    for (Name name : this.getNameList()) {
+      nameWriter.writeField(Address.addressNameId++);
+      nameWriter.writeField(Address.addressId);
+      nameWriter.writeField(name.getNameType());
+      nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(name.getName());
+      nameWriter.endRecord();
+    }
+
+    Address.addressId++;
+    addressWriter.endRecord();
+  }
 }

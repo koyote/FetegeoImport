@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
+import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
 
 import java.util.List;
 
@@ -46,5 +47,11 @@ public abstract class GenericTag {
 
   public void setOriginEntity(EntityType originEntity) {
     this.originEntity = originEntity;
+  }
+
+  public void write(CopyFileWriter copyFileWriter, CopyFileWriter nameWriter) {
+    copyFileWriter.writeField(this.getId());
+    copyFileWriter.writeField(this.getType());
+    copyFileWriter.writeField(LocationProcessor.findLocation(this));
   }
 }

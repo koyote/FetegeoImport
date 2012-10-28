@@ -20,9 +20,9 @@ import java.util.Map;
  */
 public class LocationProcessor {
 
-  private Map<Long, Point> nodeMap;
-  private Map<Long, Polygon> wayMap;
-  private Map<Long, MultiPolygon> relationMap;
+  private static Map<Long, Point> nodeMap;
+  private static Map<Long, Polygon> wayMap;
+  private static Map<Long, MultiPolygon> relationMap;
 
   private PointBuilder pointBuilder;
   private PolygonBuilder polygonBuilder;
@@ -53,7 +53,7 @@ public class LocationProcessor {
     }
   }
 
-  public Geometry findLocation(GenericTag tag) {
+  public static Geometry findLocation(GenericTag tag) {
     switch (tag.getOriginEntity()) {
       case Node:
         return nodeMap.get(tag.getId());

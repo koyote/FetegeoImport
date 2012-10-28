@@ -74,9 +74,11 @@ public class FetegeoImportTask implements Sink {
 
   private void write(GenericTag tag) {
     if (tag instanceof Place) {
-      writePlace((Place) tag);
+      tag.write(placeWriter, placeNameWriter);
+      //writePlace((Place) tag);
     } else if (tag instanceof Address || tag instanceof Highway) {
-      writeRoad(tag);
+      tag.write(addressWriter, addressNameWriter);
+      //writeRoad(tag);
     }
 
   }
@@ -88,8 +90,8 @@ public class FetegeoImportTask implements Sink {
     placeWriter.writeField(placeId);
     placeWriter.writeField(place.getId());
     placeWriter.writeField(place.getType());
-    placeWriter.writeField(place.getPopulation());
     placeWriter.writeField(locationProcessor.findLocation(place));
+    placeWriter.writeField(place.getPopulation());
 
     for (Name name : place.getNameList()) {
       placeNameWriter.writeField(placeNameId++);
