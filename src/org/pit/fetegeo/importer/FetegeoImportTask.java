@@ -17,6 +17,7 @@ import java.util.Map;
 
 public class FetegeoImportTask implements Sink {
 
+  private LanguageProcessor languageProcessor;
   private LocationProcessor locationProcessor;
   private TagProcessor tagProcessor;
 
@@ -38,10 +39,11 @@ public class FetegeoImportTask implements Sink {
     String outPath = outdir.getAbsolutePath();
     System.out.println("The Output directory is: " + outPath);
 
+    container = new CompletableContainer();
+
+    languageProcessor = new LanguageProcessor(container.add(new CopyFileWriter(new File(outPath, "lang.txt"))));
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
-
-    container = new CompletableContainer();
 
     addressWriter = container.add(new CopyFileWriter(new File(outPath, "address.txt")));
     addressNameWriter = container.add(new CopyFileWriter(new File(outPath, "address_name.txt")));
@@ -79,7 +81,7 @@ public class FetegeoImportTask implements Sink {
 
   }
 
-  // TODO: name language; get rid of duplicate code (implement write() inside GenericTag?)
+  // TODO: get rid of duplicate code (implement write() inside GenericTag?)
   private void writePlace(Place place) {
     if (place == null) return;
 
@@ -93,6 +95,7 @@ public class FetegeoImportTask implements Sink {
       placeNameWriter.writeField(placeNameId++);
       placeNameWriter.writeField(placeId);
       placeNameWriter.writeField(name.getNameType());
+      placeNameWriter.writeField(languageProcessor.findLanguageId(name.getLanguage()));
       placeNameWriter.writeField(name.getName());
       placeNameWriter.endRecord();
     }
@@ -113,6 +116,7 @@ public class FetegeoImportTask implements Sink {
         addressNameWriter.writeField(addressNameId++);
         addressNameWriter.writeField(addressId);
         addressNameWriter.writeField(name.getNameType());
+        addressNameWriter.writeField(languageProcessor.findLanguageId(name.getLanguage()));
         addressNameWriter.writeField(name.getName());
         addressNameWriter.endRecord();
       }
