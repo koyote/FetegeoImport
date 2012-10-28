@@ -14,7 +14,7 @@ import java.util.List;
 public class TagProcessor {
 
 
-  public List<GenericTag> processTags(Entity entity) {
+  public List<GenericTag> process(Entity entity) {
     String key;
 
     for (Tag tag : entity.getTags()) {
@@ -53,7 +53,6 @@ public class TagProcessor {
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
       }
-      // TODO: is_in
     }
     place.setNameList(nameList);
 
@@ -82,8 +81,6 @@ public class TagProcessor {
         highway.setRef(value);
       }
     }
-
-    // TODO: is_in
 
     // We don't want highways without names
     if (nameList.isEmpty() && highway.getRef() == null) {
@@ -122,7 +119,7 @@ public class TagProcessor {
       }
     }
 
-    // TODO: city, country (lookup??)
+    // TODO: city, country (lookup??), post_code
 
     address.setNameList(nameList);
 

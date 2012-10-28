@@ -17,22 +17,14 @@ import java.util.Map;
 
 public class FetegeoImportTask implements Sink {
 
-  private LanguageProcessor languageProcessor;
   private LocationProcessor locationProcessor;
   private TagProcessor tagProcessor;
 
   private CompletableContainer container;
-  private CopyFileWriter addressWriter;            // having separate address table makes searching faster
+  private CopyFileWriter addressWriter;
   private CopyFileWriter addressNameWriter;
   private CopyFileWriter placeWriter;
   private CopyFileWriter placeNameWriter;
-  private CopyFileWriter postcodeWriter;
-
-  private Long placeId = 0l;
-  private Long placeNameId = 0l;
-  private Long addressId = 0l;
-  private Long addressNameId = 0l;
-
 
   public FetegeoImportTask(final File outdir) {
 
@@ -41,7 +33,7 @@ public class FetegeoImportTask implements Sink {
 
     container = new CompletableContainer();
 
-    languageProcessor = new LanguageProcessor(container.add(new CopyFileWriter(new File(outPath, "lang.txt"))));
+    new LanguageProcessor(container.add(new CopyFileWriter(new File(outPath, "lang.txt"))));
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
 
@@ -49,7 +41,6 @@ public class FetegeoImportTask implements Sink {
     addressNameWriter = container.add(new CopyFileWriter(new File(outPath, "address_name.txt")));
     placeWriter = container.add(new CopyFileWriter(new File(outPath, "place.txt")));
     placeNameWriter = container.add(new CopyFileWriter(new File(outPath, "place_name.txt")));
-    postcodeWriter = container.add(new CopyFileWriter(new File(outPath, "postcode.txt")));
 
   }
 
@@ -62,9 +53,9 @@ public class FetegeoImportTask implements Sink {
     locationProcessor.process(entity);
 
     // Process tags
-    List<GenericTag> tagList = tagProcessor.processTags(entity);
+    List<GenericTag> tagList = tagProcessor.process(entity);
 
-    // Write to place file
+    // Write to file
     if (tagList != null) {
       for (GenericTag tag : tagList) {
         if (tag instanceof Place) {
@@ -78,6 +69,7 @@ public class FetegeoImportTask implements Sink {
 
   @Override
   public void initialize(Map<String, Object> stringObjectMap) {
+    // What is this?
   }
 
   @Override

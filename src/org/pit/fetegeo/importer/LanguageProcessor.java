@@ -18,10 +18,9 @@ import java.util.Map;
 public class LanguageProcessor {
 
   private static final String OPENGEO_URL = "http://opengeocode.org/download/iso639lang.txt";
-
   private static Map<String, Language> languageMap = new HashMap<String, Language>();
-  private static CopyFileWriter langWriter;
-  private static Long langId = 0l;
+
+  private CopyFileWriter langWriter;
 
   public LanguageProcessor(CopyFileWriter langWriter) {
     this.langWriter = langWriter;
@@ -33,11 +32,13 @@ public class LanguageProcessor {
     }
   }
 
-  private static void fetchAndSaveLangs() throws IOException {
+  private void fetchAndSaveLangs() throws IOException {
     URL fetchURL = new URL(OPENGEO_URL);
     InputStream inputStream = fetchURL.openStream();
 
     BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+
+    long langId = 0l;
     String line, name, iso639_1, iso639_2;
     String nullString = null;
 
