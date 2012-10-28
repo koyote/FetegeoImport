@@ -89,7 +89,7 @@ public class FetegeoImportTask implements Sink {
     placeWriter.writeField(place.getId());
     placeWriter.writeField(place.getType());
     placeWriter.writeField(place.getPopulation());
-    placeWriter.writeField(locationProcessor.findLocation(place.getId()));
+    placeWriter.writeField(locationProcessor.findLocation(place));
 
     for (Name name : place.getNameList()) {
       placeNameWriter.writeField(placeNameId++);
@@ -109,7 +109,7 @@ public class FetegeoImportTask implements Sink {
     addressWriter.writeField(addressId);
     addressWriter.writeField(tag.getId());
     addressWriter.writeField(tag.getType());
-    addressWriter.writeField(locationProcessor.findLocation(tag.getId()));
+    addressWriter.writeField(locationProcessor.findLocation(tag));
 
     if (tag.getNameList() != null) {  // "addr" will be null here
       for (Name name : tag.getNameList()) {

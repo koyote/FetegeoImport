@@ -37,8 +37,9 @@ public class TagProcessor {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
-    place.setId(entity.getId());
 
+    place.setId(entity.getId());
+    place.setOriginEntity(entity.getType());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -66,7 +67,9 @@ public class TagProcessor {
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+
     highway.setId(entity.getId());
+    highway.setOriginEntity(entity.getType());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -98,7 +101,9 @@ public class TagProcessor {
     Address address = new Address();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
+
     address.setId(entity.getId());
+    address.setOriginEntity(entity.getType());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -124,10 +129,6 @@ public class TagProcessor {
     tags.add(address);
 
     return tags;
-  }
-
-  private List<GenericTag> processBoundary(Entity entity) {
-    return null;
   }
 
 }

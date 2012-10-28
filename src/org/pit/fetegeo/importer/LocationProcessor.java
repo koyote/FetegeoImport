@@ -53,8 +53,17 @@ public class LocationProcessor {
     }
   }
 
-  public Geometry findLocation(Long id) {
-    return nodeMap.get(id) == null ? wayMap.get(id) : nodeMap.get(id);
+  public Geometry findLocation(GenericTag tag) {
+    switch (tag.getOriginEntity()) {
+      case Node:
+        return nodeMap.get(tag.getId());
+      case Way:
+        return wayMap.get(tag.getId());
+      case Relation:
+        return relationMap.get(tag.getId());
+      default:
+        return null;
+    }
   }
 
   private void process(Node node) {

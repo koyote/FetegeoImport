@@ -1,5 +1,7 @@
 package org.pit.fetegeo.importer;
 
+import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
+
 import java.util.List;
 
 /**
@@ -12,7 +14,7 @@ public abstract class GenericTag {
   private Long id;
   private String type;
   private List<Name> nameList;
-
+  private EntityType originEntity;
 
   public Long getId() {
     return id;
@@ -38,4 +40,11 @@ public abstract class GenericTag {
     this.nameList = nameList;
   }
 
+  public EntityType getOriginEntity() {
+    return originEntity;
+  }
+
+  public void setOriginEntity(EntityType originEntity) {
+    this.originEntity = originEntity;
+  }
 }
