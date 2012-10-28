@@ -67,71 +67,13 @@ public class FetegeoImportTask implements Sink {
     // Write to place file
     if (tagList != null) {
       for (GenericTag tag : tagList) {
-        write(tag);
+        if (tag instanceof Place) {
+          tag.write(placeWriter, placeNameWriter);
+        } else if (tag instanceof Address || tag instanceof Highway) {
+          tag.write(addressWriter, addressNameWriter);
+        }
       }
     }
-  }
-
-  private void write(GenericTag tag) {
-    if (tag instanceof Place) {
-      tag.write(placeWriter, placeNameWriter);
-      //writePlace((Place) tag);
-    } else if (tag instanceof Address || tag instanceof Highway) {
-      tag.write(addressWriter, addressNameWriter);
-      //writeRoad(tag);
-    }
-
-  }
-
-  // TODO: get rid of duplicate code (implement write() inside GenericTag?)
-  private void writePlace(Place place) {
-    if (place == null) return;
-
-    placeWriter.writeField(placeId);
-    placeWriter.writeField(place.getId());
-    placeWriter.writeField(place.getType());
-    placeWriter.writeField(locationProcessor.findLocation(place));
-    placeWriter.writeField(place.getPopulation());
-
-    for (Name name : place.getNameList()) {
-      placeNameWriter.writeField(placeNameId++);
-      placeNameWriter.writeField(placeId);
-      placeNameWriter.writeField(name.getNameType());
-      placeNameWriter.writeField(languageProcessor.findLanguageId(name.getLanguage()));
-      placeNameWriter.writeField(name.getName());
-      placeNameWriter.endRecord();
-    }
-    placeId++;
-    placeWriter.endRecord();
-  }
-
-  private void writeRoad(GenericTag tag) {
-    if (tag == null) return;
-
-    addressWriter.writeField(addressId);
-    addressWriter.writeField(tag.getId());
-    addressWriter.writeField(tag.getType());
-    addressWriter.writeField(locationProcessor.findLocation(tag));
-
-    if (tag.getNameList() != null) {  // "addr" will be null here
-      for (Name name : tag.getNameList()) {
-        addressNameWriter.writeField(addressNameId++);
-        addressNameWriter.writeField(addressId);
-        addressNameWriter.writeField(name.getNameType());
-        addressNameWriter.writeField(languageProcessor.findLanguageId(name.getLanguage()));
-        addressNameWriter.writeField(name.getName());
-        addressNameWriter.endRecord();
-      }
-    } else { // for "addr" tags
-      addressNameWriter.writeField(addressNameId++);
-      addressNameWriter.writeField(addressId);
-      addressNameWriter.writeField("name");
-      addressNameWriter.writeField(((Address) tag).print());
-      addressNameWriter.endRecord();
-    }
-    addressId++;
-    addressWriter.endRecord();
-
   }
 
   @Override

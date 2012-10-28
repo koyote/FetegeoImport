@@ -19,6 +19,7 @@ public class Highway extends GenericTag {
     this.ref = ref;
   }
 
+  // TODO: merge this with address or something.
 
   public void write(CopyFileWriter addressWriter, CopyFileWriter nameWriter) {
     addressWriter.writeField(Address.addressId);
