@@ -1,5 +1,7 @@
 package org.pit.fetegeo.importer.objects;
 
+import org.pit.fetegeo.importer.processors.LanguageProcessor;
+
 /**
  * Author: Pit Apps
  * Date: 10/26/12
@@ -9,7 +11,7 @@ public class Name {
 
   private String nameType;
   private String name;
-  private String language;
+  private Long languageId;
 
   public Name(String name, String nameType) {
     this.name = name;
@@ -17,9 +19,8 @@ public class Name {
 
     // Set language
     if (nameType.startsWith("name:")) {
-      String[] nameToken = nameType.split(":");
-      setLanguage(nameToken[1]);
-      setNameType("name");
+      this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1]);
+      this.nameType = "name";
     }
   }
 
@@ -27,21 +28,11 @@ public class Name {
     return nameType;
   }
 
-  public void setNameType(String nameType) {
-    this.nameType = nameType;
-  }
-
   public String getName() {
     return name;
   }
 
-  public String getLanguage() {
-    return language;
+  public Long getLanguageId() {
+    return languageId;
   }
-
-  public void setLanguage(String language) {
-    this.language = language;
-  }
-
-
 }

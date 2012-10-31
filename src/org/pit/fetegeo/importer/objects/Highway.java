@@ -34,7 +34,7 @@ public class Highway extends GenericTag {
     for (Name name : this.getNameList()) {
       nameWriter.writeField(Address.addressNameId++);
       nameWriter.writeField(Address.addressId);
-      nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(name.getLanguageId());
       nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();

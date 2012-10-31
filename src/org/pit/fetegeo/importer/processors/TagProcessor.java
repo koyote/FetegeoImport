@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class TagProcessor {
 
-  List<GenericTag> tags;
+  private List<GenericTag> tags;
 
   public List<GenericTag> process(Entity entity) {
     String key;

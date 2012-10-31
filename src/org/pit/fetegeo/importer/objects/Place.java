@@ -16,7 +16,7 @@ public class Place extends GenericTag {
   private static Long placeNameId = 0l;
 
   public Long getPopulation() {
-    return population == null ? -1l : population;
+    return population;
   }
 
   public void setPopulation(Long population) {
@@ -34,7 +34,7 @@ public class Place extends GenericTag {
     for (Name name : this.getNameList()) {
       nameWriter.writeField(placeNameId++);
       nameWriter.writeField(placeId);
-      nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(name.getLanguageId());
       nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();
