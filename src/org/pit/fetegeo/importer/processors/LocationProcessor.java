@@ -24,8 +24,8 @@ public class LocationProcessor {
   private static Map<Long, Polygon> wayMap;
   private static Map<Long, MultiPolygon> relationMap;
 
-  private PointBuilder pointBuilder;
-  private PolygonBuilder polygonBuilder;
+  private final PointBuilder pointBuilder;
+  private final PolygonBuilder polygonBuilder;
 
   public LocationProcessor() {
     pointBuilder = new PointBuilder();

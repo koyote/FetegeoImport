@@ -1,5 +1,9 @@
 package org.pit.fetegeo.importer.objects;
 
+import org.pit.fetegeo.importer.processors.CleverWriter;
+import org.pit.fetegeo.importer.processors.LanguageProcessor;
+import org.pit.fetegeo.importer.processors.LocationProcessor;
+
 /**
  * Author: Pit Apps
  * Date: 10/25/12
@@ -19,18 +23,18 @@ public class Place extends GenericTag {
     this.population = population;
   }
 
-  public void write(org.pit.fetegeo.importer.processors.CleverWriter placeWriter, org.pit.fetegeo.importer.processors.CleverWriter nameWriter) {
+  public void write(CleverWriter placeWriter, CleverWriter nameWriter) {
     placeWriter.writeField(placeId);
 
     super.write(placeWriter, nameWriter);
 
-    placeWriter.writeField(org.pit.fetegeo.importer.processors.LocationProcessor.findLocation(this));
+    placeWriter.writeField(LocationProcessor.findLocation(this));
     placeWriter.writeField(this.getPostCodeId());
     placeWriter.writeField(this.getPopulation());
     for (Name name : this.getNameList()) {
       nameWriter.writeField(placeNameId++);
       nameWriter.writeField(placeId);
-      nameWriter.writeField(org.pit.fetegeo.importer.processors.LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
       nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();

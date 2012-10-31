@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer.objects;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
+import org.pit.fetegeo.importer.processors.CleverWriter;
 
 import java.util.List;
 
@@ -57,12 +58,12 @@ public abstract class GenericTag {
     this.postCodeId = postCodeId;
   }
 
-  public void write(org.pit.fetegeo.importer.processors.CleverWriter copyFileWriter) {
+  public void write(CleverWriter copyFileWriter) {
     copyFileWriter.writeField(this.getId());
     copyFileWriter.writeField(this.getType());
   }
 
-  public void write(org.pit.fetegeo.importer.processors.CleverWriter copyFileWriter, org.pit.fetegeo.importer.processors.CleverWriter nameWriter) {
+  public void write(CleverWriter copyFileWriter, CleverWriter nameWriter) {
     write(copyFileWriter);
   }
 }

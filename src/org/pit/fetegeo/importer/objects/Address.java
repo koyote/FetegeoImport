@@ -15,16 +15,8 @@ public class Address extends GenericTag {
   public static Long addressId = 0l;
   public static Long addressNameId = 0l;
 
-  public String getStreet() {
-    return street;
-  }
-
   public void setStreet(String street) {
     this.street = street;
-  }
-
-  public String getHousenumber() {
-    return housenumber;
   }
 
   public void setHousenumber(String housenumber) {

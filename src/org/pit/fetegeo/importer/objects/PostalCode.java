@@ -8,15 +8,11 @@ package org.pit.fetegeo.importer.objects;
 public class PostalCode extends GenericTag {
 
   private static Long postCodeId = -1l;
-  private String postCode;
+  private final String postCode;
 
   public PostalCode(String postCode) {
     this.postCode = postCode;
     postCodeId++;
-  }
-
-  public String getPostCode() {
-    return postCode;
   }
 
   public Long getPostCodeId() {
