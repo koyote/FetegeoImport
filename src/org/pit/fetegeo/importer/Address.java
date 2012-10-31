@@ -11,7 +11,6 @@ public class Address extends GenericTag {
 
   private String street;
   private String housenumber;
-
   public static Long addressId = 0l;
   public static Long addressNameId = 0l;
 
@@ -35,16 +34,18 @@ public class Address extends GenericTag {
     return housenumber + " " + street;
   }
 
-  public void write(CopyFileWriter addressWriter, CopyFileWriter nameWriter) {
-    String nullString = null;
+  public void write(CleverWriter addressWriter, CleverWriter nameWriter) {
     addressWriter.writeField(addressId);
 
     super.write(addressWriter, nameWriter);
 
+    addressWriter.writeField(LocationProcessor.findLocation(this));
+    addressWriter.writeField(this.getPostCodeId());
+
     nameWriter.writeField(addressNameId++);
     nameWriter.writeField(addressId);
-    nameWriter.writeField("name");
-    nameWriter.writeField(nullString);
+    nameWriter.writeField(Constants.NULL_STRING); // language_id
+    nameWriter.writeField("name");     // name_type
     nameWriter.writeField(this.print());
     nameWriter.endRecord();
 

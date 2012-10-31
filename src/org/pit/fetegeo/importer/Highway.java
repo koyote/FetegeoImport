@@ -21,16 +21,19 @@ public class Highway extends GenericTag {
 
   // TODO: merge this with address or something.
 
-  public void write(CopyFileWriter addressWriter, CopyFileWriter nameWriter) {
+  public void write(CleverWriter addressWriter, CleverWriter nameWriter) {
     addressWriter.writeField(Address.addressId);
 
     super.write(addressWriter, nameWriter);
 
+    addressWriter.writeField(LocationProcessor.findLocation(this));
+    addressWriter.writeField(this.getPostCodeId());
+
     for (Name name : this.getNameList()) {
       nameWriter.writeField(Address.addressNameId++);
       nameWriter.writeField(Address.addressId);
-      nameWriter.writeField(name.getNameType());
       nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();
     }

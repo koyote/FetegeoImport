@@ -21,17 +21,19 @@ public class Place extends GenericTag {
     this.population = population;
   }
 
-  public void write(CopyFileWriter placeWriter, CopyFileWriter nameWriter) {
+  public void write(CleverWriter placeWriter, CleverWriter nameWriter) {
     placeWriter.writeField(placeId);
 
     super.write(placeWriter, nameWriter);
 
+    placeWriter.writeField(LocationProcessor.findLocation(this));
+    placeWriter.writeField(this.getPostCodeId());
     placeWriter.writeField(this.getPopulation());
     for (Name name : this.getNameList()) {
       nameWriter.writeField(placeNameId++);
       nameWriter.writeField(placeId);
-      nameWriter.writeField(name.getNameType());
       nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();
     }

@@ -16,6 +16,7 @@ public abstract class GenericTag {
   private String type;
   private List<Name> nameList;
   private EntityType originEntity;
+  private Long postCodeId;
 
   public Long getId() {
     return id;
@@ -49,9 +50,20 @@ public abstract class GenericTag {
     this.originEntity = originEntity;
   }
 
-  public void write(CopyFileWriter copyFileWriter, CopyFileWriter nameWriter) {
+  public Long getPostCodeId() {
+    return postCodeId;
+  }
+
+  public void setPostCodeId(Long postCodeId) {
+    this.postCodeId = postCodeId;
+  }
+
+  public void write(CleverWriter copyFileWriter) {
     copyFileWriter.writeField(this.getId());
     copyFileWriter.writeField(this.getType());
-    copyFileWriter.writeField(LocationProcessor.findLocation(this));
+  }
+
+  public void write(CleverWriter copyFileWriter, CleverWriter nameWriter) {
+    write(copyFileWriter);
   }
 }

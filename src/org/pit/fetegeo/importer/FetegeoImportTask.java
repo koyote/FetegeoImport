@@ -21,10 +21,11 @@ public class FetegeoImportTask implements Sink {
   private TagProcessor tagProcessor;
 
   private CompletableContainer container;
-  private CopyFileWriter addressWriter;
-  private CopyFileWriter addressNameWriter;
-  private CopyFileWriter placeWriter;
-  private CopyFileWriter placeNameWriter;
+  private CleverWriter addressWriter;
+  private CleverWriter addressNameWriter;
+  private CleverWriter placeWriter;
+  private CleverWriter placeNameWriter;
+  private CleverWriter postCodeWriter;
 
   public FetegeoImportTask(final File outdir) {
 
@@ -33,15 +34,15 @@ public class FetegeoImportTask implements Sink {
 
     container = new CompletableContainer();
 
-    new LanguageProcessor(container.add(new CopyFileWriter(new File(outPath, "lang.txt"))));
+    new LanguageProcessor(container.add(new CleverWriter(new File(outPath, "lang.txt"))));
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
 
-    addressWriter = container.add(new CopyFileWriter(new File(outPath, "address.txt")));
-    addressNameWriter = container.add(new CopyFileWriter(new File(outPath, "address_name.txt")));
-    placeWriter = container.add(new CopyFileWriter(new File(outPath, "place.txt")));
-    placeNameWriter = container.add(new CopyFileWriter(new File(outPath, "place_name.txt")));
-
+    addressWriter = container.add(new CleverWriter(new File(outPath, "address.txt")));
+    addressNameWriter = container.add(new CleverWriter(new File(outPath, "address_name.txt")));
+    placeWriter = container.add(new CleverWriter(new File(outPath, "place.txt")));
+    placeNameWriter = container.add(new CleverWriter(new File(outPath, "place_name.txt")));
+    postCodeWriter = container.add(new CleverWriter(new File(outPath, "postcode.txt")));
   }
 
 
@@ -56,13 +57,13 @@ public class FetegeoImportTask implements Sink {
     List<GenericTag> tagList = tagProcessor.process(entity);
 
     // Write to file
-    if (tagList != null) {
-      for (GenericTag tag : tagList) {
-        if (tag instanceof Place) {
-          tag.write(placeWriter, placeNameWriter);
-        } else if (tag instanceof Address || tag instanceof Highway) {
-          tag.write(addressWriter, addressNameWriter);
-        }
+    for (GenericTag tag : tagList) {
+      if (tag instanceof Place) {
+        tag.write(placeWriter, placeNameWriter);
+      } else if (tag instanceof Address || tag instanceof Highway) {
+        tag.write(addressWriter, addressNameWriter);
+      } else if (tag instanceof PostalCode) {
+        tag.write(postCodeWriter);
       }
     }
   }

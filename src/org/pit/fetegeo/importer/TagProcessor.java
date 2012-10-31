@@ -13,27 +13,29 @@ import java.util.List;
  */
 public class TagProcessor {
 
+  List<GenericTag> tags;
 
   public List<GenericTag> process(Entity entity) {
     String key;
+    tags = new ArrayList<GenericTag>();
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
-      if (key.equalsIgnoreCase("place") || (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative"))) {
-        return processPlace(entity);
-      }
-      if (key.equalsIgnoreCase("highway") || (tag.getKey().equalsIgnoreCase("route") && tag.getValue().equalsIgnoreCase("road"))) {
-        return processHighway(entity);
-      }
-      if (key.startsWith("addr")) {
-        return processAddress(entity);
+      if (key.equalsIgnoreCase("place") || (key.equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative"))) {
+        processPlace(entity);
+        break;
+      } else if (key.equalsIgnoreCase("highway") || (key.equalsIgnoreCase("route") && tag.getValue().equalsIgnoreCase("road"))) {
+        processHighway(entity);
+        break;
+      } else if (key.startsWith("addr")) {
+        processAddress(entity);
+        break;
       }
     }
-    return null;
+    return tags;
   }
 
-  private List<GenericTag> processPlace(Entity entity) {
-    List<GenericTag> tags = new ArrayList<GenericTag>();
+  private void processPlace(Entity entity) {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
@@ -52,17 +54,16 @@ public class TagProcessor {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
+      } else if (key.equalsIgnoreCase("postal_code")) {
+        processPostalCode(entity, tag, place);
       }
     }
     place.setNameList(nameList);
 
     tags.add(place);
-
-    return tags;
   }
 
-  private List<GenericTag> processHighway(Entity entity) {
-    List<GenericTag> tags = new ArrayList<GenericTag>();
+  private void processHighway(Entity entity) {
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
@@ -79,22 +80,21 @@ public class TagProcessor {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("ref")) {
         highway.setRef(value);
+      } else if (key.equalsIgnoreCase("postal_code")) {
+        processPostalCode(entity, tag, highway);
       }
     }
 
     // We don't want highways without names
     if (nameList.isEmpty() && highway.getRef() == null) {
-      return null;
+      return;
     }
 
     highway.setNameList(nameList);
     tags.add(highway);
-
-    return tags;
   }
 
-  private List<GenericTag> processAddress(Entity entity) {
-    List<GenericTag> tags = new ArrayList<GenericTag>();
+  private void processAddress(Entity entity) {
     Address address = new Address();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
@@ -117,15 +117,31 @@ public class TagProcessor {
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
       }
+      if (key.equalsIgnoreCase("postal_code") || key.equalsIgnoreCase("addr:postcode")) {
+        processPostalCode(entity, tag, address);
+      }
     }
-
-    // TODO: city, country (lookup??), post_code
 
     address.setNameList(nameList);
 
     tags.add(address);
+  }
 
-    return tags;
+  // We allow for duplicate postcodes so that we can then store all locations for a given post_code (and combine the area using PostGIS)
+  private void processPostalCode(Entity entity, Tag tag, GenericTag genericTag) {
+    String value = tag.getValue();
+    String splitter = ";";
+    if (value.contains(",")) splitter = ",";
+    String[] values = value.split(splitter); // sometimes we have more than one postcode separated by a comma or semi-colon
+
+    for (String code : values) {
+      PostalCode postalCode = new PostalCode(code);
+      postalCode.setId(entity.getId());
+      postalCode.setType(entity.getType().name());
+      postalCode.setOriginEntity(entity.getType());
+      tags.add(postalCode);
+      genericTag.setPostCodeId(postalCode.getPostCodeId());
+    }
   }
 
 }

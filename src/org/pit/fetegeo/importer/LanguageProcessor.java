@@ -20,9 +20,9 @@ public class LanguageProcessor {
   private static final String OPENGEO_URL = "http://opengeocode.org/download/iso639lang.txt";
   private static Map<String, Language> languageMap = new HashMap<String, Language>();
 
-  private CopyFileWriter langWriter;
+  private CleverWriter langWriter;
 
-  public LanguageProcessor(CopyFileWriter langWriter) {
+  public LanguageProcessor(CleverWriter langWriter) {
     this.langWriter = langWriter;
 
     try {
@@ -40,7 +40,6 @@ public class LanguageProcessor {
 
     long langId = 0l;
     String line, name, iso639_1, iso639_2;
-    String nullString = null;
 
     while ((line = br.readLine()) != null) {
       String[] tokens = line.split(";");
@@ -58,14 +57,14 @@ public class LanguageProcessor {
         langWriter.writeField(iso639_1);
         languageMap.put(iso639_1, language);
       } else {
-        langWriter.writeField(nullString);
+        langWriter.writeField(Constants.NULL_STRING);
       }
       if (!iso639_2.isEmpty()) {
         language.setIso639_2(iso639_2);
         langWriter.writeField(iso639_2);
         languageMap.put(iso639_2, language);
       } else {
-        langWriter.writeField(nullString);
+        langWriter.writeField(Constants.NULL_STRING);
       }
 
       langWriter.writeField(name);
@@ -76,11 +75,10 @@ public class LanguageProcessor {
     inputStream.close();
   }
 
-  // This method returns String because writeField does not like null Longs
-  public static String findLanguageId(String code) {
+  public static Long findLanguageId(String code) {
     Language language = languageMap.get(code);
 
-    return language == null ? null : String.valueOf(language.getId());
+    return language == null ? null : language.getId();
   }
 
 }
