@@ -1,6 +1,4 @@
-package org.pit.fetegeo.importer;
-
-import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+package org.pit.fetegeo.importer.objects;
 
 /**
  * Author: Pit Apps
@@ -25,12 +23,12 @@ public class PostalCode extends GenericTag {
     return postCodeId;
   }
 
-  public void write(CleverWriter postCodeWriter) {
+  public void write(org.pit.fetegeo.importer.processors.CleverWriter postCodeWriter) {
     postCodeWriter.writeField(postCodeId);
 
     super.write(postCodeWriter);
 
-    postCodeWriter.writeField(LocationProcessor.findLocation(this));
+    postCodeWriter.writeField(org.pit.fetegeo.importer.processors.LocationProcessor.findLocation(this));
     postCodeWriter.writeField(postCode);
     postCodeWriter.endRecord();
   }

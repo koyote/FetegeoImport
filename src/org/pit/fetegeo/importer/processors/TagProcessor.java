@@ -1,7 +1,12 @@
-package org.pit.fetegeo.importer;
+package org.pit.fetegeo.importer.processors;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
+import org.pit.fetegeo.importer.objects.GenericTag;
+import org.pit.fetegeo.importer.objects.Highway;
+import org.pit.fetegeo.importer.objects.Name;
+import org.pit.fetegeo.importer.objects.Place;
+import org.pit.fetegeo.importer.objects.PostalCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +18,11 @@ import java.util.List;
  */
 public class TagProcessor {
 
-  List<GenericTag> tags;
+  List<org.pit.fetegeo.importer.objects.GenericTag> tags;
 
-  public List<GenericTag> process(Entity entity) {
+  public List<org.pit.fetegeo.importer.objects.GenericTag> process(Entity entity) {
     String key;
-    tags = new ArrayList<GenericTag>();
+    tags = new ArrayList<org.pit.fetegeo.importer.objects.GenericTag>();
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -36,8 +41,8 @@ public class TagProcessor {
   }
 
   private void processPlace(Entity entity) {
-    Place place = new Place();
-    List<Name> nameList = new ArrayList<Name>();
+    org.pit.fetegeo.importer.objects.Place place = new Place();
+    List<org.pit.fetegeo.importer.objects.Name> nameList = new ArrayList<org.pit.fetegeo.importer.objects.Name>();
     String key, value;
 
     place.setId(entity.getId());
@@ -51,7 +56,7 @@ public class TagProcessor {
       } else if (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative")) {
         place.setType("boundary");
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
-        nameList.add(new Name(value, key));
+        nameList.add(new org.pit.fetegeo.importer.objects.Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
       } else if (key.equalsIgnoreCase("postal_code")) {
@@ -64,8 +69,8 @@ public class TagProcessor {
   }
 
   private void processHighway(Entity entity) {
-    Highway highway = new Highway();
-    List<Name> nameList = new ArrayList<Name>();
+    org.pit.fetegeo.importer.objects.Highway highway = new Highway();
+    List<org.pit.fetegeo.importer.objects.Name> nameList = new ArrayList<org.pit.fetegeo.importer.objects.Name>();
     String key, value;
 
     highway.setId(entity.getId());
@@ -77,7 +82,7 @@ public class TagProcessor {
       if (key.equalsIgnoreCase("highway")) {
         highway.setType(value);
       } else if (key.startsWith("name:") || key.endsWith("name")) {
-        nameList.add(new Name(value, key));
+        nameList.add(new org.pit.fetegeo.importer.objects.Name(value, key));
       } else if (key.equalsIgnoreCase("ref")) {
         highway.setRef(value);
       } else if (key.equalsIgnoreCase("postal_code")) {
@@ -95,8 +100,8 @@ public class TagProcessor {
   }
 
   private void processAddress(Entity entity) {
-    Address address = new Address();
-    List<Name> nameList = new ArrayList<Name>();
+    org.pit.fetegeo.importer.objects.Address address = new org.pit.fetegeo.importer.objects.Address();
+    List<org.pit.fetegeo.importer.objects.Name> nameList = new ArrayList<org.pit.fetegeo.importer.objects.Name>();
     String key, value;
 
     address.setId(entity.getId());
@@ -135,7 +140,7 @@ public class TagProcessor {
     String[] values = value.split(splitter); // sometimes we have more than one postcode separated by a comma or semi-colon
 
     for (String code : values) {
-      PostalCode postalCode = new PostalCode(code);
+      org.pit.fetegeo.importer.objects.PostalCode postalCode = new PostalCode(code);
       postalCode.setId(entity.getId());
       postalCode.setType(entity.getType().name());
       postalCode.setOriginEntity(entity.getType());

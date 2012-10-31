@@ -1,4 +1,4 @@
-package org.pit.fetegeo.importer;
+package org.pit.fetegeo.importer.objects;
 
 /**
  * Author: Pit Apps

@@ -1,6 +1,6 @@
-package org.pit.fetegeo.importer;
+package org.pit.fetegeo.importer.processors;
 
-import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+import org.pit.fetegeo.importer.objects.Language;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,8 +17,7 @@ import java.util.Map;
  */
 public class LanguageProcessor {
 
-  private static final String OPENGEO_URL = "http://opengeocode.org/download/iso639lang.txt";
-  private static Map<String, Language> languageMap = new HashMap<String, Language>();
+  private static Map<String, org.pit.fetegeo.importer.objects.Language> languageMap = new HashMap<String, org.pit.fetegeo.importer.objects.Language>();
 
   private CleverWriter langWriter;
 
@@ -33,8 +32,8 @@ public class LanguageProcessor {
   }
 
   private void fetchAndSaveLangs() throws IOException {
-    URL fetchURL = new URL(OPENGEO_URL);
-    InputStream inputStream = fetchURL.openStream();
+    URL url = new URL(org.pit.fetegeo.importer.objects.Constants.ISO_CODE_URL);
+    InputStream inputStream = url.openStream();
 
     BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -45,7 +44,7 @@ public class LanguageProcessor {
       String[] tokens = line.split(";");
       if (tokens.length != 4 || tokens[0].startsWith("#")) continue;
 
-      Language language = new Language(langId);
+      org.pit.fetegeo.importer.objects.Language language = new org.pit.fetegeo.importer.objects.Language(langId);
       langWriter.writeField(langId++);
 
       iso639_1 = tokens[0];
@@ -57,14 +56,14 @@ public class LanguageProcessor {
         langWriter.writeField(iso639_1);
         languageMap.put(iso639_1, language);
       } else {
-        langWriter.writeField(Constants.NULL_STRING);
+        langWriter.writeField(org.pit.fetegeo.importer.objects.Constants.NULL_STRING);
       }
       if (!iso639_2.isEmpty()) {
         language.setIso639_2(iso639_2);
         langWriter.writeField(iso639_2);
         languageMap.put(iso639_2, language);
       } else {
-        langWriter.writeField(Constants.NULL_STRING);
+        langWriter.writeField(org.pit.fetegeo.importer.objects.Constants.NULL_STRING);
       }
 
       langWriter.writeField(name);

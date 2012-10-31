@@ -1,6 +1,7 @@
-package org.pit.fetegeo.importer;
+package org.pit.fetegeo.importer.objects;
 
-import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+import org.pit.fetegeo.importer.processors.CleverWriter;
+import org.pit.fetegeo.importer.processors.LocationProcessor;
 
 /**
  * Author: Pit Apps

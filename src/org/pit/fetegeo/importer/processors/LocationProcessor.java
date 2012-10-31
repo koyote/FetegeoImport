@@ -1,4 +1,4 @@
-package org.pit.fetegeo.importer;
+package org.pit.fetegeo.importer.processors;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.pgsimple.common.PointBuilder;
@@ -53,7 +53,7 @@ public class LocationProcessor {
     }
   }
 
-  public static Geometry findLocation(GenericTag tag) {
+  public static Geometry findLocation(org.pit.fetegeo.importer.objects.GenericTag tag) {
     switch (tag.getOriginEntity()) {
       case Node:
         return nodeMap.get(tag.getId());

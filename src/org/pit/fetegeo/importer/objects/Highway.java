@@ -1,6 +1,4 @@
-package org.pit.fetegeo.importer;
-
-import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+package org.pit.fetegeo.importer.objects;
 
 /**
  * Author: Pit Apps
@@ -21,18 +19,18 @@ public class Highway extends GenericTag {
 
   // TODO: merge this with address or something.
 
-  public void write(CleverWriter addressWriter, CleverWriter nameWriter) {
+  public void write(org.pit.fetegeo.importer.processors.CleverWriter addressWriter, org.pit.fetegeo.importer.processors.CleverWriter nameWriter) {
     addressWriter.writeField(Address.addressId);
 
     super.write(addressWriter, nameWriter);
 
-    addressWriter.writeField(LocationProcessor.findLocation(this));
+    addressWriter.writeField(org.pit.fetegeo.importer.processors.LocationProcessor.findLocation(this));
     addressWriter.writeField(this.getPostCodeId());
 
     for (Name name : this.getNameList()) {
       nameWriter.writeField(Address.addressNameId++);
       nameWriter.writeField(Address.addressId);
-      nameWriter.writeField(LanguageProcessor.findLanguageId(name.getLanguage()));
+      nameWriter.writeField(org.pit.fetegeo.importer.processors.LanguageProcessor.findLanguageId(name.getLanguage()));
       nameWriter.writeField(name.getNameType());
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();
