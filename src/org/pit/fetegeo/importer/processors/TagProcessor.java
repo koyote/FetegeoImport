@@ -6,6 +6,7 @@ import org.pit.fetegeo.importer.objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Pit Apps
@@ -39,6 +40,7 @@ public class TagProcessor {
   private void processPlace(Entity entity) {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
+    Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
 
     place.setId(entity.getId());
@@ -59,7 +61,12 @@ public class TagProcessor {
         processPostalCode(entity, tag, place);
       }
     }
+
     place.setNameList(nameList);
+
+    if (!typeMap.containsKey(place.getType())) {
+      typeMap.put(place.getType(), Long.valueOf(typeMap.size()));
+    }
 
     tags.add(place);
   }
@@ -67,6 +74,7 @@ public class TagProcessor {
   private void processHighway(Entity entity) {
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
+    Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
 
     highway.setId(entity.getId());
@@ -92,6 +100,11 @@ public class TagProcessor {
     }
 
     highway.setNameList(nameList);
+
+    if (!typeMap.containsKey(highway.getType())) {
+      typeMap.put(highway.getType(), Long.valueOf(typeMap.size()));
+    }
+
     tags.add(highway);
   }
 
@@ -138,7 +151,7 @@ public class TagProcessor {
     for (String code : values) {
       PostalCode postalCode = new PostalCode(code);
       postalCode.setId(entity.getId());
-      postalCode.setType(entity.getType().name());
+      postalCode.setType(entity.getType().toString());
       postalCode.setOriginEntity(entity.getType());
       tags.add(postalCode);
       genericTag.setPostCodeId(postalCode.getPostCodeId());

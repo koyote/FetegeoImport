@@ -1,7 +1,6 @@
 package org.pit.fetegeo.importer.objects;
 
 import org.pit.fetegeo.importer.processors.CleverWriter;
-import org.pit.fetegeo.importer.processors.LanguageProcessor;
 import org.pit.fetegeo.importer.processors.LocationProcessor;
 
 /**
@@ -35,7 +34,7 @@ public class Highway extends GenericTag {
       nameWriter.writeField(Address.addressNameId++);
       nameWriter.writeField(Address.addressId);
       nameWriter.writeField(name.getLanguageId());
-      nameWriter.writeField(name.getNameType());
+      nameWriter.writeField(GenericTag.getTypeMap().get(name.getNameType()));
       nameWriter.writeField(name.getName());
       nameWriter.endRecord();
     }

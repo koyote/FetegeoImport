@@ -34,7 +34,6 @@ public class LanguageProcessor {
   private void fetchAndSaveLangs() throws IOException {
     URL url = new URL(Constants.ISO_CODE_URL);
     InputStream inputStream = url.openStream();
-
     BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
     long langId = 0l;
@@ -44,11 +43,11 @@ public class LanguageProcessor {
       String[] tokens = line.split(";");
       if (tokens.length != 4 || tokens[0].startsWith("#")) continue;
 
-      langWriter.writeField(langId);
-
       iso639_1 = tokens[0];
       iso639_2 = tokens[1];
       name = tokens[2];
+
+      langWriter.writeField(langId);
 
       if (!iso639_1.isEmpty()) {
         langWriter.writeField(iso639_1);
@@ -56,7 +55,9 @@ public class LanguageProcessor {
       } else {
         langWriter.writeField(Constants.NULL_STRING);
       }
+
       if (!iso639_2.isEmpty()) {
+        iso639_2 = iso639_2.substring(0, 3); // cut off B and T
         langWriter.writeField(iso639_2);
         languageMap.put(iso639_2, langId);
       } else {

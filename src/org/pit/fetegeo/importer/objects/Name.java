@@ -2,6 +2,8 @@ package org.pit.fetegeo.importer.objects;
 
 import org.pit.fetegeo.importer.processors.LanguageProcessor;
 
+import java.util.Map;
+
 /**
  * Author: Pit Apps
  * Date: 10/26/12
@@ -10,7 +12,7 @@ import org.pit.fetegeo.importer.processors.LanguageProcessor;
 public class Name {
 
   private String nameType;
-  private String name;
+  private final String name;
   private Long languageId;
 
   public Name(String name, String nameType) {
@@ -20,7 +22,13 @@ public class Name {
     // Set language
     if (nameType.startsWith("name:")) {
       this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1]);
-      this.nameType = "name";
+      this.nameType = "name:";
+    }
+
+    // Check if the type has been added already
+    Map<String, Long> typeMap = GenericTag.getTypeMap();
+    if (!typeMap.containsKey(this.nameType)) {
+      typeMap.put(this.nameType, Long.valueOf(typeMap.size()));
     }
   }
 

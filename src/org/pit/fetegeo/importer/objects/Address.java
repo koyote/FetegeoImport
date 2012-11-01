@@ -38,7 +38,7 @@ public class Address extends GenericTag {
     nameWriter.writeField(addressNameId++);
     nameWriter.writeField(addressId);
     nameWriter.writeField(Constants.NULL_STRING); // language_id
-    nameWriter.writeField("name");     // name_type
+    nameWriter.writeField(GenericTag.getTypeMap().get("name"));     // name_type
     nameWriter.writeField(this.print());
     nameWriter.endRecord();
 

@@ -1,5 +1,8 @@
 package org.pit.fetegeo.importer.objects;
 
+import org.pit.fetegeo.importer.processors.CleverWriter;
+import org.pit.fetegeo.importer.processors.LocationProcessor;
+
 /**
  * Author: Pit Apps
  * Date: 10/31/12
@@ -19,12 +22,12 @@ public class PostalCode extends GenericTag {
     return postCodeId;
   }
 
-  public void write(org.pit.fetegeo.importer.processors.CleverWriter postCodeWriter) {
+  public void write(CleverWriter postCodeWriter) {
     postCodeWriter.writeField(postCodeId);
 
     super.write(postCodeWriter);
 
-    postCodeWriter.writeField(org.pit.fetegeo.importer.processors.LocationProcessor.findLocation(this));
+    postCodeWriter.writeField(LocationProcessor.findLocation(this));
     postCodeWriter.writeField(postCode);
     postCodeWriter.endRecord();
   }

@@ -3,7 +3,9 @@ package org.pit.fetegeo.importer.objects;
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.pit.fetegeo.importer.processors.CleverWriter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Pit Apps
@@ -14,9 +16,11 @@ public abstract class GenericTag {
 
   private Long id;
   private String type;
+  private Long typeId;
   private List<Name> nameList;
   private EntityType originEntity;
   private Long postCodeId;
+  private static Map<String, Long> typeMap = new HashMap<String, Long>();
 
   public Long getId() {
     return id;
@@ -58,9 +62,13 @@ public abstract class GenericTag {
     this.postCodeId = postCodeId;
   }
 
+  public static Map<String, Long> getTypeMap() {
+    return typeMap;
+  }
+
   public void write(CleverWriter copyFileWriter) {
-    copyFileWriter.writeField(this.getId());
-    copyFileWriter.writeField(this.getType());
+    copyFileWriter.writeField(this.getId());                  // write OSM_ID
+    copyFileWriter.writeField(typeMap.get(this.getType()));   // write TYPE_ID
   }
 
   public void write(CleverWriter copyFileWriter, CleverWriter nameWriter) {

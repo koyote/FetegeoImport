@@ -18,6 +18,7 @@ import org.pit.fetegeo.importer.processors.TagProcessor;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class FetegeoImportTask implements Sink {
 
@@ -30,6 +31,7 @@ public class FetegeoImportTask implements Sink {
   private final CleverWriter placeWriter;
   private final CleverWriter placeNameWriter;
   private final CleverWriter postCodeWriter;
+  private final CleverWriter typeWriter;
 
   public FetegeoImportTask(final File outdir) {
 
@@ -47,6 +49,7 @@ public class FetegeoImportTask implements Sink {
     placeWriter = container.add(new CleverWriter(new File(outPath, "place.txt")));
     placeNameWriter = container.add(new CleverWriter(new File(outPath, "place_name.txt")));
     postCodeWriter = container.add(new CleverWriter(new File(outPath, "postcode.txt")));
+    typeWriter = container.add(new CleverWriter(new File(outPath, "type.txt")));
   }
 
 
@@ -58,7 +61,7 @@ public class FetegeoImportTask implements Sink {
     locationProcessor.process(entity);
 
     // Process tags
-    List<org.pit.fetegeo.importer.objects.GenericTag> tagList = tagProcessor.process(entity);
+    List<GenericTag> tagList = tagProcessor.process(entity);
 
     // Write to file
     for (GenericTag tag : tagList) {
@@ -80,11 +83,22 @@ public class FetegeoImportTask implements Sink {
   @Override
   public void complete() {
     locationProcessor.printSize();
+    writeTypes();
     container.complete();
   }
 
   @Override
   public void release() {
     container.release();
+  }
+
+  private void writeTypes() {
+    Map<String, Long> typeMap = GenericTag.getTypeMap();
+    for (String type : typeMap.keySet()) {
+      typeWriter.writeField(typeMap.get(type));
+      typeWriter.writeField(type);
+      typeWriter.endRecord();
+    }
+
   }
 }
