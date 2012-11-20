@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer.objects;
 
 import org.pit.fetegeo.importer.processors.CleverWriter;
+import org.pit.fetegeo.importer.processors.HashMaker;
 import org.pit.fetegeo.importer.processors.LocationProcessor;
 
 /**
@@ -40,6 +41,7 @@ public class Address extends GenericTag {
     nameWriter.writeField(Constants.NULL_STRING); // language_id
     nameWriter.writeField(GenericTag.getTypeMap().get("name"));     // name_type
     nameWriter.writeField(this.print());
+    nameWriter.writeField(HashMaker.getMD5Hash(this.print()));
     nameWriter.endRecord();
 
     addressId++;

@@ -23,7 +23,9 @@ CREATE TABLE place_name (
  place_id bigint,
  lang_id bigint,
  type_id bigint,
- name text);
+ name text,
+ name_hash varchar(32)
+);
 
 DROP TABLE address CASCADE;
 CREATE TABLE address (
@@ -40,7 +42,8 @@ CREATE TABLE address_name (
  address_id bigint,
  lang_id bigint,
  type_id bigint,
- name text
+ name text,
+ name_hash varchar(32)
 );
 
 DROP TABLE lang CASCADE;

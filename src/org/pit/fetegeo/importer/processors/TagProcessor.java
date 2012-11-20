@@ -51,14 +51,16 @@ public class TagProcessor {
       value = tag.getValue();
       if (key.equalsIgnoreCase("place")) {
         place.setType(tag.getValue());
-      } else if (tag.getKey().equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative")) {
-        place.setType("boundary");
+      } else if (tag.getKey().equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
+        //place.setType("boundary");  // TODO: integrate with type
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, place);
+      } else if (key.equalsIgnoreCase("admin_level") && value.equalsIgnoreCase("2")) {  // TODO: integrate with type
+        place.setType("country");
       }
     }
 

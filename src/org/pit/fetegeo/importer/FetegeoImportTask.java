@@ -10,15 +10,11 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.lifecycle.CompletableContainer;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.pit.fetegeo.importer.objects.*;
-import org.pit.fetegeo.importer.processors.CleverWriter;
-import org.pit.fetegeo.importer.processors.LanguageProcessor;
-import org.pit.fetegeo.importer.processors.LocationProcessor;
-import org.pit.fetegeo.importer.processors.TagProcessor;
+import org.pit.fetegeo.importer.processors.*;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class FetegeoImportTask implements Sink {
 
@@ -76,11 +72,6 @@ public class FetegeoImportTask implements Sink {
   }
 
   @Override
-  public void initialize(Map<String, Object> stringObjectMap) {
-    // What is this?
-  }
-
-  @Override
   public void complete() {
     locationProcessor.printSize();
     writeTypes();
@@ -99,6 +90,6 @@ public class FetegeoImportTask implements Sink {
       typeWriter.writeField(type);
       typeWriter.endRecord();
     }
-
   }
+
 }

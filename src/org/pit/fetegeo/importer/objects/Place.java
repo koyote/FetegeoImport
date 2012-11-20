@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer.objects;
 
 import org.pit.fetegeo.importer.processors.CleverWriter;
+import org.pit.fetegeo.importer.processors.HashMaker;
 import org.pit.fetegeo.importer.processors.LocationProcessor;
 
 /**
@@ -36,6 +37,7 @@ public class Place extends GenericTag {
       nameWriter.writeField(name.getLanguageId());
       nameWriter.writeField(GenericTag.getTypeMap().get(name.getNameType()));
       nameWriter.writeField(name.getName());
+      nameWriter.writeField(HashMaker.getMD5Hash(name.getName()));
       nameWriter.endRecord();
     }
     placeId++;
