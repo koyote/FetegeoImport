@@ -12,6 +12,7 @@ import org.pit.fetegeo.importer.processors.LocationProcessor;
 public class Place extends GenericTag {
 
   private Long population;
+  private Long countryId;
   private static Long placeId = 0l;
   private static Long placeNameId = 0l;
 
@@ -23,6 +24,14 @@ public class Place extends GenericTag {
     this.population = population;
   }
 
+  public Long getCountryId() {
+    return countryId;
+  }
+
+  public void setCountryId(Long countryId) {
+    this.countryId = countryId;
+  }
+
   public void write(CleverWriter placeWriter, CleverWriter nameWriter) {
     placeWriter.writeField(placeId);
 
@@ -30,6 +39,7 @@ public class Place extends GenericTag {
 
     placeWriter.writeField(LocationProcessor.findLocation(this));
     placeWriter.writeField(this.getPostCodeId());
+    placeWriter.writeField(this.getCountryId());
     placeWriter.writeField(this.getPopulation());
     for (Name name : this.getNameList()) {
       nameWriter.writeField(placeNameId++);

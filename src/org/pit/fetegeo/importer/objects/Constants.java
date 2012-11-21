@@ -8,6 +8,7 @@ package org.pit.fetegeo.importer.objects;
 public class Constants {
 
   public static final String NULL_STRING = null;
-  public static final String ISO_CODE_URL = "http://opengeocode.org/download/iso639lang.txt";
+  public static final String LANG_ISO_CODE_URL = "http://opengeocode.org/download/iso639lang.txt";
+  public static final String COUNTRY_ISO_CODE_URL = "http://opengeocode.org/download/countrynames.txt";
 
 }

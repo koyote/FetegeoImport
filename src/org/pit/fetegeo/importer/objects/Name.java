@@ -14,6 +14,7 @@ public class Name {
   private String nameType;
   private final String name;
   private Long languageId;
+  private boolean localised;
 
   public Name(String name, String nameType) {
     this.name = name;
@@ -23,6 +24,9 @@ public class Name {
     if (nameType.startsWith("name:")) {
       this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1]);
       this.nameType = "name:";
+      this.localised = true;
+    } else {
+      this.localised = false;
     }
 
     // Check if the type has been added already
@@ -42,5 +46,9 @@ public class Name {
 
   public Long getLanguageId() {
     return languageId;
+  }
+
+  public boolean isLocalised() {
+    return localised;
   }
 }

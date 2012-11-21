@@ -42,6 +42,7 @@ public class TagProcessor {
     List<Name> nameList = new ArrayList<Name>();
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
+    boolean isCountry = false;
 
     place.setId(entity.getId());
     place.setOriginEntity(entity.getType());
@@ -50,22 +51,41 @@ public class TagProcessor {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("place")) {
-        place.setType(tag.getValue());
+        if (place.getType() == null || place.getType().isEmpty()) { // don't overwrite boundary type
+          place.setType(value);
+          if (value.equalsIgnoreCase("country")) { // we're dealing with a country here
+            isCountry = true;
+          }
+        }
       } else if (tag.getKey().equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
-        //place.setType("boundary");  // TODO: integrate with type
+        place.setType("boundary");
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
         place.setPopulation(Long.valueOf(value));
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, place);
-      } else if (key.equalsIgnoreCase("admin_level") && value.equalsIgnoreCase("2")) {  // TODO: integrate with type
-        place.setType("country");
       }
     }
 
     place.setNameList(nameList);
 
+    // Set the country id if it's a country (we're using english names)
+    if (isCountry) {
+      for (Name name : nameList) {
+        if (!name.isLocalised() || (name.getLanguageId() != null && name.getLanguageId().equals(LanguageProcessor.findLanguageId("en")))) {
+          Long countryId = CountryCodeProcessor.findCountryId(name.getName());
+          if (countryId == null) {
+            continue;
+          } else {
+            place.setCountryId(countryId);
+            break;
+          }
+        }
+      }
+    }
+
+    // If this tag has a new type, add it to our list
     if (!typeMap.containsKey(place.getType())) {
       typeMap.put(place.getType(), Long.valueOf(typeMap.size()));
     }

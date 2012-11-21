@@ -14,6 +14,7 @@ CREATE TABLE place (
   type_id bigint,
   location geometry,
   postcode_id bigint,
+  country_id bigint,
   population bigint
 );
 
@@ -60,13 +61,21 @@ CREATE TABLE postcode (
  osm_id bigint,
  type postcode_type,
  location geometry,
- name text
+ main text,
+ sup text
 );
 
 DROP TABLE type CASCADE;
 CREATE TABLE type (
  type_id bigserial,
  name text
+);
+
+DROP TABLE country CASCADE;
+CREATE TABLE country (
+ country_id bigserial,
+ iso3166_2 char(2),
+ iso3166_3 char(3)
 );
 
 \copy address FROM 'address.txt'
@@ -76,4 +85,5 @@ CREATE TABLE type (
 \copy place_name FROM 'place_name.txt'
 \copy postcode FROM 'postcode.txt'
 \copy type FROM 'type.txt'
+\copy country FROM 'country.txt'
 

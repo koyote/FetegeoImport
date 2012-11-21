@@ -37,6 +37,8 @@ public class FetegeoImportTask implements Sink {
     container = new CompletableContainer();
 
     new LanguageProcessor(container.add(new CleverWriter(new File(outPath, "lang.txt"))));
+    new CountryCodeProcessor(container.add(new CleverWriter(new File(outPath, "country.txt"))));
+
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
 

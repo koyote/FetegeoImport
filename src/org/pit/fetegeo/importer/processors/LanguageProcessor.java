@@ -32,7 +32,7 @@ public class LanguageProcessor {
   }
 
   private void fetchAndSaveLangs() throws IOException {
-    URL url = new URL(Constants.ISO_CODE_URL);
+    URL url = new URL(Constants.LANG_ISO_CODE_URL);
     InputStream inputStream = url.openStream();
     BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -40,8 +40,11 @@ public class LanguageProcessor {
     String line, name, iso639_1, iso639_2;
 
     while ((line = br.readLine()) != null) {
+      if (line.startsWith("#")) continue;
+
       String[] tokens = line.split(";");
-      if (tokens.length != 4 || tokens[0].startsWith("#")) continue;
+
+      if (tokens.length != 4) continue;
 
       iso639_1 = tokens[0];
       iso639_2 = tokens[1];
