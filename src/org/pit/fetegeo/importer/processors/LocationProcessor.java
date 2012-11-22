@@ -3,10 +3,7 @@ package org.pit.fetegeo.importer.processors;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.pgsimple.common.PointBuilder;
 import org.openstreetmap.osmosis.pgsimple.common.PolygonBuilder;
-import org.postgis.Geometry;
-import org.postgis.MultiPolygon;
-import org.postgis.Point;
-import org.postgis.Polygon;
+import org.postgis.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,8 +18,8 @@ import java.util.Map;
 public class LocationProcessor {
 
   private static Map<Long, Point> nodeMap;
-  private static Map<Long, Polygon> wayMap;
-  private static Map<Long, MultiPolygon> relationMap;
+  private static Map<Long, Geometry> wayMap;
+  private static Map<Long, Geometry> relationMap;
 
   private final PointBuilder pointBuilder;
   private final PolygonBuilder polygonBuilder;
@@ -31,8 +28,8 @@ public class LocationProcessor {
     pointBuilder = new PointBuilder();
     polygonBuilder = new PolygonBuilder();
     nodeMap = new HashMap<Long, Point>();
-    wayMap = new HashMap<Long, Polygon>();
-    relationMap = new HashMap<Long, MultiPolygon>();
+    wayMap = new HashMap<Long, Geometry>();
+    relationMap = new HashMap<Long, Geometry>();
   }
 
   public void process(Entity entity) {
@@ -67,7 +64,8 @@ public class LocationProcessor {
   }
 
   private void process(Node node) {
-    nodeMap.put(node.getId(), pointBuilder.createPoint(node.getLatitude(), node.getLongitude()));
+    Point point = pointBuilder.createPoint(node.getLatitude(), node.getLongitude());
+    nodeMap.put(node.getId(), point);
   }
 
   private void process(Way way) {
@@ -77,37 +75,86 @@ public class LocationProcessor {
     for (int i = 0; i < points.length; i++) {
       points[i] = nodeMap.get(wayNodes.get(i).getNodeId());
     }
-    wayMap.put(way.getId(), polygonBuilder.createPolygon(points));
+
+    Geometry result;
+
+    // If points make a circle, we have a polygon. otherwise we have a line
+    if (points.length > 3 && points[0].equals(points[points.length - 1])) {
+      result = polygonBuilder.createPolygon(points);
+    } else {
+      result = new LineString(points);
+      result.setSrid(4326);
+    }
+
+    wayMap.put(way.getId(), result);
   }
 
   private void process(Relation relation) {
-    List<Polygon> coordinateList = new ArrayList<Polygon>();
+    List<Geometry> coordinateList = new ArrayList<Geometry>();
     fetchRelationCoors(relation, coordinateList);
-    Polygon[] polyArray = coordinateList.toArray(new Polygon[coordinateList.size()]);
-    MultiPolygon relationPolygons = new MultiPolygon(polyArray);
+    int polygons = 0, lines = 0;
 
-    relationMap.put(relation.getId(), relationPolygons);
+    for (Geometry g : coordinateList) {
+      if (g instanceof Polygon) {
+        polygons++;
+      } else if (g instanceof LineString) {
+        lines++;
+      }
+    }
+
+    Geometry result;
+
+    // Find the most used way type and make it multi!
+    if (lines > polygons) {
+      coordinateList = cleanList(coordinateList, Geometry.LINESTRING);
+      LineString[] lineArray = coordinateList.toArray(new LineString[coordinateList.size()]);
+      result = new MultiLineString(lineArray);
+    } else {
+      coordinateList = cleanList(coordinateList, Geometry.POLYGON);
+      Polygon[] polyArray = coordinateList.toArray(new Polygon[coordinateList.size()]);
+      result = new MultiPolygon(polyArray);
+    }
+    result.setSrid(4326);
+
+    relationMap.put(relation.getId(), result);
   }
 
-  private void fetchRelationCoors(Relation relation, List<Polygon> coordinateList) {
-    Polygon poly;
+  private void fetchRelationCoors(Relation relation, List<Geometry> coordinateList) {
+    Geometry geometry;
     for (RelationMember relationMember : relation.getMembers()) {
+
+      // only care about outer roles (maybe inner too?)
+      if (!relationMember.getMemberRole().equalsIgnoreCase("outer")) {
+        continue;
+      }
       EntityType memberType = relationMember.getMemberType();
       switch (memberType) {
         case Node:
           // we don't care about Nodes as these are not used for roads or bounds (a part from designating the capital and other useless stuff)
           break;
         case Way:
-          if ((poly = wayMap.get(relationMember.getMemberId())) != null) {
-            coordinateList.add(poly);
+          if ((geometry = wayMap.get(relationMember.getMemberId())) != null) {
+            coordinateList.add(geometry);
           }
           break;
         case Relation:
-          MultiPolygon multiPoly = relationMap.get(relationMember.getMemberId());
-          if (multiPoly != null) {
-            for (int i = 0; i < multiPoly.numPolygons(); i++) {
-              if ((poly = multiPoly.getPolygon(i)) != null) {
-                coordinateList.add(poly);
+          Geometry otherRelation = relationMap.get(relationMember.getMemberId());
+          if (otherRelation != null) {
+
+            // We need to differentiate between the two different types of relations
+            if (otherRelation instanceof MultiPolygon) {
+              MultiPolygon multiPolygon = (MultiPolygon) otherRelation;
+              for (int i = 0; i < multiPolygon.numPolygons(); i++) {
+                if ((geometry = multiPolygon.getPolygon(i)) != null) {
+                  coordinateList.add(geometry);
+                }
+              }
+            } else if (otherRelation instanceof MultiLineString) {
+              MultiLineString multiLineString = (MultiLineString) otherRelation;
+              for (int i = 0; i < multiLineString.numLines(); i++) {
+                if ((geometry = multiLineString.getLine(i)) != null) {
+                  coordinateList.add(geometry);
+                }
               }
             }
           }
@@ -116,6 +163,16 @@ public class LocationProcessor {
           break;
       }
     }
+  }
+
+  private List<Geometry> cleanList(List<Geometry> list, int type) {
+    List<Geometry> cleanedList = new ArrayList<Geometry>();
+    for (Geometry g : list) {
+      if (g.getType() == type) {
+        cleanedList.add(g);
+      }
+    }
+    return cleanedList;
   }
 
   public void printSize() {

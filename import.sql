@@ -87,3 +87,52 @@ CREATE TABLE country (
 \copy type FROM 'type.txt'
 \copy country FROM 'country.txt'
 
+ALTER TABLE postcode ADD COLUMN country_id bigint;
+
+CREATE INDEX place_location_idx ON place USING GIST(location);
+CREATE INDEX address_location_idx ON address USING GIST(location);
+CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
+CREATE INDEX place_country_idx ON place(country_id);
+
+VACUUM ANALYZE;
+
+-- WHY DOES THIS NOT WORK??????~!!!!! ALSO: VERY SLOW :(
+UPDATE postcode
+SET country_id = place.country_id
+FROM place
+WHERE place.country_id IS NOT NULL AND ST_Covers(place.location, postcode.location);
+
+
+-- THIS WORKS WHEN THE LOOPS ARE REVERSED BUT ONLY FINDS ONE MATCH -_-
+-- Takes 5 minutes
+
+--CREATE OR REPLACE FUNCTION updatePostCodeCountry()
+-- RETURNS VOID AS $$
+--DECLARE
+-- cty_id int;
+-- cty_loc geometry;
+-- count int;
+-- total int;
+-- pc_id int;
+-- pc_loc geometry;
+--BEGIN
+-- SELECT count(*) INTO total FROM postcode;
+-- count := total;
+-- RAISE NOTICE 'Initial count: %',count;
+-- FOR cty_id, cty_loc 99
+-- LOOP
+--  IF count % 100 = 0 THEN
+--   RAISE NOTICE 'Remaining: %', (count*100/total);
+--  END IF;
+--  FOR pc_loc, pc_id IN SELECT location, postcode_id FROM postcode LOOP
+--   IF ST_Covers(cty_loc, pc_loc) THEN
+--    RAISE NOTICE 'IT COVERS!';
+--    UPDATE postcode SET country_id = cty_id WHERE postcode_id = pc_id;
+--   END IF;
+--  END LOOP;
+-- count := count - 1;
+-- END LOOP;
+--END;
+--$$  LANGUAGE plpgsql
+--
+-- SELECT updatePostCodeCountry();

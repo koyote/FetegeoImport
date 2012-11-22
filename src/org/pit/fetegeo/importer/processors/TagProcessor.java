@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer.processors;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
+import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.pit.fetegeo.importer.objects.*;
 
@@ -43,6 +44,7 @@ public class TagProcessor {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
     boolean isCountry = false;
+    boolean isBoundary = false;
 
     place.setId(entity.getId());
     place.setOriginEntity(entity.getType());
@@ -57,7 +59,7 @@ public class TagProcessor {
             isCountry = true;
           }
         }
-      } else if (tag.getKey().equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
+      } else if (key.equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
         place.setType("boundary");
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
@@ -66,18 +68,28 @@ public class TagProcessor {
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, place);
       }
+
+      // find the boundaries of a country. Not all admin_level=2 relations are countries though.
+      else if (key.equalsIgnoreCase("admin_level") && value.equalsIgnoreCase("2")) {
+        if (entity.getType().equals(EntityType.Relation)) {
+          isBoundary = true;
+        }
+      }
     }
+
 
     place.setNameList(nameList);
 
     // Set the country id if it's a country (we're using english names)
-    if (isCountry) {
+    if (isCountry || isBoundary) {
       for (Name name : nameList) {
         if (!name.isLocalised() || (name.getLanguageId() != null && name.getLanguageId().equals(LanguageProcessor.findLanguageId("en")))) {
+          System.out.println("LOOKING FOR: " + name.getName());
           Long countryId = CountryCodeProcessor.findCountryId(name.getName());
           if (countryId == null) {
             continue;
           } else {
+            System.out.println("FOUND " + countryId);
             place.setCountryId(countryId);
             break;
           }
@@ -89,6 +101,7 @@ public class TagProcessor {
     if (!typeMap.containsKey(place.getType())) {
       typeMap.put(place.getType(), Long.valueOf(typeMap.size()));
     }
+
 
     tags.add(place);
   }

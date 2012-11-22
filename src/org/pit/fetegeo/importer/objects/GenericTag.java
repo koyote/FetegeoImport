@@ -16,7 +16,6 @@ public abstract class GenericTag {
 
   private Long id;
   private String type;
-  private Long typeId;
   private List<Name> nameList;
   private EntityType originEntity;
   private Long postCodeId;
