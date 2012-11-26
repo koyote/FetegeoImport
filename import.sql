@@ -89,22 +89,40 @@ CREATE TABLE country (
 
 ALTER TABLE postcode ADD COLUMN country_id bigint;
 
+-- TODO: see if this changes performance
+SELECT AddGeometryColumn('place','bbox',4326,'GEOMETRY','2');
+SELECT AddGeometryColumn('postcode','bbox',4326,'GEOMETRY','2');
+
+-- Make a bounding box
+UPDATE place SET bbox = ST_Envelope(ST_Force_2d(location));
+UPDATE postcode SET bbox = ST_Envelope(ST_Force_2d(location));
+
+-- Make some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
 CREATE INDEX address_location_idx ON address USING GIST(location);
 CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
 CREATE INDEX place_country_idx ON place(country_id);
 
+-- Cluster it all!
+CLUSTER place_location_idx ON place;
+CLUSTER address_location_idx ON address;
+CLUSTER postcode_location_idx ON postcode;
+
 VACUUM ANALYZE;
 
--- WHY DOES THIS NOT WORK??????~!!!!! ALSO: VERY SLOW :(
+-- Convert MultiLineStrings to MultiPolygon if they are closed
+UPDATE place
+SET location = ST_MakePolygon(ST_LineMerge(pp.location))
+FROM (SELECT place_id, location FROM place WHERE ST_IsClosed(ST_LineMerge(location)) AND ST_GeometryType(ST_LineMerge(location)) = 'ST_LineString') AS pp
+WHERE place.place_id=pp.place_id;
+
+-- Update postcodes with their country
 UPDATE postcode
 SET country_id = place.country_id
 FROM place
-WHERE place.country_id IS NOT NULL AND ST_Covers(place.location, postcode.location);
+WHERE place.country_id IS NOT NULL AND ST_Contains(place.location, postcode.location);
 
-
--- THIS WORKS WHEN THE LOOPS ARE REVERSED BUT ONLY FINDS ONE MATCH -_-
--- Takes 5 minutes
+-- Equivalent function? Test performance!
 
 --CREATE OR REPLACE FUNCTION updatePostCodeCountry()
 -- RETURNS VOID AS $$

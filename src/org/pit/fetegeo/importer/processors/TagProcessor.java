@@ -31,7 +31,7 @@ public class TagProcessor {
         processHighway(entity);
         break;
       } else if (key.startsWith("addr")) {
-        processAddress(entity);
+        //processAddress(entity);    //TODO: IGNORE THIS TAG?
         break;
       }
     }
