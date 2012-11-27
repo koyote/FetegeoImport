@@ -89,12 +89,13 @@ CREATE TABLE country (
 \copy country FROM 'country.txt'
 
 ALTER TABLE postcode ADD COLUMN country_id bigint;
+ALTER TABLE place ADD COLUMN parent_id bigint;
 
 -- Make some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
 CREATE INDEX address_location_idx ON address USING GIST(location);
 CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
-CREATE INDEX place_country_idx ON place(country_id);
+CREATE INDEX place_country_idx ON place USING btree(country_id);
 
 -- Cluster it all!
 CLUSTER place_location_idx ON place;
@@ -105,7 +106,7 @@ VACUUM ANALYZE;
 
 -- Clean up locations (make linestring polygons if they are etc)
 UPDATE place
-SET location = ST_BuildArea(location)
+SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
 WHERE ST_BuildArea(location) IS NOT NULL;
 
 -- Update postcodes with their country
@@ -115,35 +116,21 @@ SET country_id = place.country_id
 FROM place
 WHERE place.country_id IS NOT NULL AND ST_Contains(place.location, postcode.location);
 
--- Equivalent function? Test performance!
+-- Update place's parents
+-- TODO: do some performance testing and sanity checks
+UPDATE place
+SET parent_id = b_id
+FROM (
+ SELECT small.place_id as s_id, big.place_id as b_id
+ FROM place as small, place as big
+ WHERE ST_Area(big.location)=
+	(SELECT MIN(ST_Area(b2.location))
+	 FROM place as b2
+	 WHERE NOT ST_Equals(small.location, b2.location)
+	 AND ST_Covers(b2.location, small.location)
+	 AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'MultiPolygon')
+	 )
+ ) pp
+WHERE place_id = s_id;
 
---CREATE OR REPLACE FUNCTION updatePostCodeCountry()
--- RETURNS VOID AS $$
---DECLARE
--- cty_id int;
--- cty_loc geometry;
--- count int;
--- total int;
--- pc_id int;
--- pc_loc geometry;
---BEGIN
--- SELECT count(*) INTO total FROM postcode;
--- count := total;
--- RAISE NOTICE 'Initial count: %',count;
--- FOR cty_id, cty_loc 99
--- LOOP
---  IF count % 100 = 0 THEN
---   RAISE NOTICE 'Remaining: %', (count*100/total);
---  END IF;
---  FOR pc_loc, pc_id IN SELECT location, postcode_id FROM postcode LOOP
---   IF ST_Covers(cty_loc, pc_loc) THEN
---    RAISE NOTICE 'IT COVERS!';
---    UPDATE postcode SET country_id = cty_id WHERE postcode_id = pc_id;
---   END IF;
---  END LOOP;
--- count := count - 1;
--- END LOOP;
---END;
---$$  LANGUAGE plpgsql
---
--- SELECT updatePostCodeCountry();
+VACUUM ANALYZE;
