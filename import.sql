@@ -1,3 +1,4 @@
+\timing
 
 DROP TYPE postcode_type CASCADE;
 CREATE TYPE postcode_type AS ENUM (
@@ -89,14 +90,6 @@ CREATE TABLE country (
 
 ALTER TABLE postcode ADD COLUMN country_id bigint;
 
--- TODO: see if this changes performance
-SELECT AddGeometryColumn('place','bbox',4326,'GEOMETRY','2');
-SELECT AddGeometryColumn('postcode','bbox',4326,'GEOMETRY','2');
-
--- Make a bounding box
-UPDATE place SET bbox = ST_Envelope(ST_Force_2d(location));
-UPDATE postcode SET bbox = ST_Envelope(ST_Force_2d(location));
-
 -- Make some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
 CREATE INDEX address_location_idx ON address USING GIST(location);
@@ -110,13 +103,13 @@ CLUSTER postcode_location_idx ON postcode;
 
 VACUUM ANALYZE;
 
--- Convert MultiLineStrings to MultiPolygon if they are closed
+-- Clean up locations (make linestring polygons if they are etc)
 UPDATE place
-SET location = ST_MakePolygon(ST_LineMerge(pp.location))
-FROM (SELECT place_id, location FROM place WHERE ST_IsClosed(ST_LineMerge(location)) AND ST_GeometryType(ST_LineMerge(location)) = 'ST_LineString') AS pp
-WHERE place.place_id=pp.place_id;
+SET location = ST_BuildArea(location)
+WHERE ST_BuildArea(location) IS NOT NULL;
 
 -- Update postcodes with their country
+-- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
 UPDATE postcode
 SET country_id = place.country_id
 FROM place
