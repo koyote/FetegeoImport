@@ -3,6 +3,7 @@ package org.pit.fetegeo.importer.processors;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.pgsimple.common.PointBuilder;
 import org.openstreetmap.osmosis.pgsimple.common.PolygonBuilder;
+import org.pit.fetegeo.importer.objects.GenericTag;
 import org.postgis.*;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class LocationProcessor {
     }
   }
 
-  public static Geometry findLocation(org.pit.fetegeo.importer.objects.GenericTag tag) {
+  public static Geometry findLocation(GenericTag tag) {
     switch (tag.getOriginEntity()) {
       case Node:
         return nodeMap.get(tag.getId());
@@ -92,7 +93,7 @@ public class LocationProcessor {
   private void process(Relation relation) {
     List<Geometry> coordinateList = new ArrayList<Geometry>();
     fetchRelationCoors(relation, coordinateList);
-    int polygons = 0, lines = 0;
+    /*    int polygons = 0, lines = 0;
 
     for (Geometry g : coordinateList) {
       if (g instanceof Polygon) {
@@ -100,12 +101,14 @@ public class LocationProcessor {
       } else if (g instanceof LineString) {
         lines++;
       }
-    }
+    }*/
 
-    Geometry result;
+    //Geometry result;
+
+    GeometryCollection result = new GeometryCollection(coordinateList.toArray(new Geometry[coordinateList.size()]));
 
     // Find the most used way type and make it multi!
-    if (lines > polygons) {
+    /*    if (lines > polygons) {
       coordinateList = cleanList(coordinateList, Geometry.LINESTRING);
       LineString[] lineArray = coordinateList.toArray(new LineString[coordinateList.size()]);
       result = new MultiLineString(lineArray);
@@ -113,7 +116,7 @@ public class LocationProcessor {
       coordinateList = cleanList(coordinateList, Geometry.POLYGON);
       Polygon[] polyArray = coordinateList.toArray(new Polygon[coordinateList.size()]);
       result = new MultiPolygon(polyArray);
-    }
+    }*/
     result.setSrid(4326);
 
     relationMap.put(relation.getId(), result);
@@ -125,7 +128,7 @@ public class LocationProcessor {
 
       // only care about outer roles (maybe inner too?)
       if (!relationMember.getMemberRole().equalsIgnoreCase("outer")) {
-        continue;
+        //continue;
       }
       EntityType memberType = relationMember.getMemberType();
       switch (memberType) {
@@ -138,11 +141,12 @@ public class LocationProcessor {
           }
           break;
         case Relation:
+          if (true) break;
           Geometry otherRelation = relationMap.get(relationMember.getMemberId());
           if (otherRelation != null) {
-
+            coordinateList.add(otherRelation);
             // We need to differentiate between the two different types of relations
-            if (otherRelation instanceof MultiPolygon) {
+            /* if (otherRelation instanceof MultiPolygon) {
               MultiPolygon multiPolygon = (MultiPolygon) otherRelation;
               for (int i = 0; i < multiPolygon.numPolygons(); i++) {
                 if ((geometry = multiPolygon.getPolygon(i)) != null) {
@@ -156,7 +160,7 @@ public class LocationProcessor {
                   coordinateList.add(geometry);
                 }
               }
-            }
+            }*/
           }
           break;
         default:

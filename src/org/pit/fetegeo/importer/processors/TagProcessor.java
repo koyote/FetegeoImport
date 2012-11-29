@@ -84,12 +84,10 @@ public class TagProcessor {
     if (isCountry || isBoundary) {
       for (Name name : nameList) {
         if (!name.isLocalised() || (name.getLanguageId() != null && name.getLanguageId().equals(LanguageProcessor.findLanguageId("en")))) {
-          System.out.println("LOOKING FOR: " + name.getName());
+          //System.out.println("LOOKING FOR: " + name.getName());
           Long countryId = CountryCodeProcessor.findCountryId(name.getName());
-          if (countryId == null) {
-            continue;
-          } else {
-            System.out.println("FOUND " + countryId);
+          if (countryId != null) {
+            //System.out.println("FOUND " + countryId);
             place.setCountryId(countryId);
             break;
           }

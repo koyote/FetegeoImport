@@ -22,6 +22,7 @@ public class HashMaker {
 
   public static String getMD5Hash(String input) {
     sb = new StringBuilder();
+    input = input.trim().toLowerCase();
 
     for (byte b : md.digest(input.getBytes())) {
       sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));

@@ -104,33 +104,52 @@ CLUSTER postcode_location_idx ON postcode;
 
 VACUUM ANALYZE;
 
+UPDATE place
+SET location = ST_CollectionHomogenize(location);
+
+UPDATE postcode
+SET location = ST_CollectionHomogenize(location);
+
+UPDATE postcode
+SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
+WHERE ST_BuildArea(location) IS NOT NULL;
+
 -- Clean up locations (make linestring polygons if they are etc)
 UPDATE place
 SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
 WHERE ST_BuildArea(location) IS NOT NULL;
 
+SELECT UpdateGeometrySRID('place','location',4326); -- NO idea why we need this? CollectionHomogenize messes some entries up!
+
 -- Update postcodes with their country
--- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
+---- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
 UPDATE postcode
 SET country_id = place.country_id
 FROM place
 WHERE place.country_id IS NOT NULL AND ST_Contains(place.location, postcode.location);
 
--- Update place's parents
--- TODO: do some performance testing and sanity checks
+-- Update place's country_id
+-- TODO: Combine this and the next query somehow?
+UPDATE place
+SET country_id = p2.country_id
+FROM place as p2
+WHERE p2.country_id IS NOT NULL AND ST_Contains(p2.location, place.location);
+
+---- Update place's parents
+---- TODO: do some performance testing and sanity checks  (Maybe cache ST_Area on Polygons?)
 UPDATE place
 SET parent_id = b_id
 FROM (
- SELECT small.place_id as s_id, big.place_id as b_id
- FROM place as small, place as big
- WHERE ST_Area(big.location)=
+SELECT small.place_id as s_id, big.place_id as b_id
+FROM place as small, place as big
+WHERE ST_Area(big.location)=
 	(SELECT MIN(ST_Area(b2.location))
 	 FROM place as b2
 	 WHERE NOT ST_Equals(small.location, b2.location)
 	 AND ST_Covers(b2.location, small.location)
 	 AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'MultiPolygon')
 	 )
- ) pp
+) pp
 WHERE place_id = s_id;
 
 VACUUM ANALYZE;

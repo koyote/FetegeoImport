@@ -1,6 +1,7 @@
 package org.pit.fetegeo.importer.processors;
 
 import org.openstreetmap.osmosis.pgsimple.common.CopyFileWriter;
+import org.pit.fetegeo.importer.objects.Constants;
 
 import java.io.File;
 
@@ -18,7 +19,7 @@ public class CleverWriter extends CopyFileWriter {
   // The normal CopyFileWriter does not handle Longs. We need them so that we can store nulls though.
   public void writeField(Long l) {
     if (l == null) {
-      super.writeField(org.pit.fetegeo.importer.objects.Constants.NULL_STRING);
+      super.writeField(Constants.NULL_STRING);
     } else {
       super.writeField(l);
     }
