@@ -1,8 +1,11 @@
 package org.pit.fetegeo.importer.objects;
 
+import org.pit.fetegeo.importer.FetegeoImportTask;
 import org.pit.fetegeo.importer.processors.CleverWriter;
 import org.pit.fetegeo.importer.processors.HashMaker;
 import org.pit.fetegeo.importer.processors.LocationProcessor;
+
+import java.io.File;
 
 /**
  * Author: Pit Apps
@@ -16,7 +19,15 @@ public class Place extends GenericTag {
   private static Long placeId = 0l;
   private static Long placeNameId = 0l;
 
-  public Long getPopulation() {
+  private static final CleverWriter placeWriter;
+  private static final CleverWriter placeNameWriter;
+
+  static {
+    placeNameWriter = FetegeoImportTask.container.add(new CleverWriter(new File(Constants.OUT_PATH, "place_name.txt")));
+    placeWriter = FetegeoImportTask.container.add(new CleverWriter(new File(Constants.OUT_PATH, "place.txt")));
+  }
+
+  Long getPopulation() {
     return population;
   }
 
@@ -24,7 +35,7 @@ public class Place extends GenericTag {
     this.population = population;
   }
 
-  public Long getCountryId() {
+  Long getCountryId() {
     return countryId;
   }
 
@@ -32,26 +43,38 @@ public class Place extends GenericTag {
     this.countryId = countryId;
   }
 
-  public void write(CleverWriter placeWriter, CleverWriter nameWriter) {
-    placeWriter.writeField(placeId);
+  public void write() {
+    placeWriter.writeField(placeId);                                                 // place_id
+    super.write(placeWriter);                                                        // OSM_ID, TYPE_ID
+    placeWriter.writeField(LocationProcessor.findLocation(this));                    // location
+    placeWriter.writeField(this.getPostCodeId());                                    // postcode_id
+    placeWriter.writeField(this.getCountryId());                                     // country_id
+    placeWriter.writeField(this.getPopulation());                                    // population
 
-    super.write(placeWriter, nameWriter);
-
-    placeWriter.writeField(LocationProcessor.findLocation(this));
-    placeWriter.writeField(this.getPostCodeId());
-    placeWriter.writeField(this.getCountryId());
-    placeWriter.writeField(this.getPopulation());
     for (Name name : this.getNameList()) {
-      nameWriter.writeField(placeNameId++);
-      nameWriter.writeField(placeId);
-      nameWriter.writeField(name.getLanguageId());
-      nameWriter.writeField(GenericTag.getTypeMap().get(name.getNameType()));
-      nameWriter.writeField(name.getName());
-      nameWriter.writeField(HashMaker.getMD5Hash(name.getName()));
-      nameWriter.endRecord();
+      placeNameWriter.writeField(placeNameId++);                                          // place_name_id
+      placeNameWriter.writeField(placeId);                                                // place_id
+      placeNameWriter.writeField(name.getLanguageId());                                   // lang_id
+      placeNameWriter.writeField(GenericTag.getTypeMap().get(name.getNameType()));        // type_id
+      placeNameWriter.writeField(name.getName());                                         // name
+      placeNameWriter.writeField(HashMaker.getMD5Hash(name.getName()));                   // name_hash
+      placeNameWriter.endRecord();
     }
     placeId++;
     placeWriter.endRecord();
+  }
+
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{ ");
+    sb.append("place_id : ").append(placeId);
+    sb.append("place_name_id : ").append(placeNameId);
+    sb.append("country_id : ").append(countryId);
+    sb.append("population : ").append(population);
+    sb.append("[ names: ");
+    sb.append(this.getNameList().toString());
+    sb.append("]}");
+    return sb.toString();
   }
 
 }

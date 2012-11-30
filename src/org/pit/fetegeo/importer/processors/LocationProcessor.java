@@ -4,7 +4,10 @@ import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.pgsimple.common.PointBuilder;
 import org.openstreetmap.osmosis.pgsimple.common.PolygonBuilder;
 import org.pit.fetegeo.importer.objects.GenericTag;
-import org.postgis.*;
+import org.postgis.Geometry;
+import org.postgis.GeometryCollection;
+import org.postgis.LineString;
+import org.postgis.Point;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -141,12 +144,11 @@ public class LocationProcessor {
           }
           break;
         case Relation:
-          if (true) break;
-          Geometry otherRelation = relationMap.get(relationMember.getMemberId());
+          /*Geometry otherRelation = relationMap.get(relationMember.getMemberId());
           if (otherRelation != null) {
             coordinateList.add(otherRelation);
             // We need to differentiate between the two different types of relations
-            /* if (otherRelation instanceof MultiPolygon) {
+             if (otherRelation instanceof MultiPolygon) {
               MultiPolygon multiPolygon = (MultiPolygon) otherRelation;
               for (int i = 0; i < multiPolygon.numPolygons(); i++) {
                 if ((geometry = multiPolygon.getPolygon(i)) != null) {
@@ -160,8 +162,8 @@ public class LocationProcessor {
                   coordinateList.add(geometry);
                 }
               }
-            }*/
-          }
+            }
+          }*/
           break;
         default:
           break;

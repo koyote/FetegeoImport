@@ -19,32 +19,39 @@ public class TagProcessor {
   private List<GenericTag> tags;
 
   public List<GenericTag> process(Entity entity) {
-    String key;
+    String key, value;
     tags = new ArrayList<GenericTag>();
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
-      if (key.equalsIgnoreCase("place") || (key.equalsIgnoreCase("boundary") && tag.getValue().equalsIgnoreCase("administrative"))) {
+      value = tag.getValue();
+      if (key.equalsIgnoreCase("place") || (key.equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative"))) {
         processPlace(entity);
         break;
-      } else if (key.equalsIgnoreCase("highway") || (key.equalsIgnoreCase("route") && tag.getValue().equalsIgnoreCase("road"))) {
+      } else if (key.equalsIgnoreCase("highway")) {
+        // TODO: limit this to only a couple values?
         processHighway(entity);
         break;
       } else if (key.startsWith("addr")) {
-        //processAddress(entity);    //TODO: IGNORE THIS TAG?
+        processAddress(entity);    // TODO: IGNORE THIS TAG?
         break;
       }
     }
     return tags;
   }
 
+  private void addToTypeList(String type) {
+    Map<String, Long> typeMap = GenericTag.getTypeMap();
+    if (!typeMap.containsKey(type)) {
+      typeMap.put(type, (long) typeMap.size());
+    }
+  }
+
   private void processPlace(Entity entity) {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
-    Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
-    boolean isCountry = false;
-    boolean isBoundary = false;
+    boolean isCountry = false, isBoundary = false;
 
     place.setId(entity.getId());
     place.setOriginEntity(entity.getType());
@@ -82,12 +89,12 @@ public class TagProcessor {
 
     // Set the country id if it's a country (we're using english names)
     if (isCountry || isBoundary) {
+      Long enISOCode = LanguageProcessor.findLanguageId("en");
       for (Name name : nameList) {
-        if (!name.isLocalised() || (name.getLanguageId() != null && name.getLanguageId().equals(LanguageProcessor.findLanguageId("en")))) {
-          //System.out.println("LOOKING FOR: " + name.getName());
+        // If the name is in english, proceed
+        if (!name.isLocalised() || (name.getLanguageId() != null && name.getLanguageId().equals(enISOCode))) {
           Long countryId = CountryCodeProcessor.findCountryId(name.getName());
           if (countryId != null) {
-            //System.out.println("FOUND " + countryId);
             place.setCountryId(countryId);
             break;
           }
@@ -96,18 +103,14 @@ public class TagProcessor {
     }
 
     // If this tag has a new type, add it to our list
-    if (!typeMap.containsKey(place.getType())) {
-      typeMap.put(place.getType(), Long.valueOf(typeMap.size()));
-    }
-
-
+    addToTypeList(place.getType());
+    // Add all tags to the list
     tags.add(place);
   }
 
   private void processHighway(Entity entity) {
     Highway highway = new Highway();
     List<Name> nameList = new ArrayList<Name>();
-    Map<String, Long> typeMap = GenericTag.getTypeMap();
     String key, value;
 
     highway.setId(entity.getId());
@@ -134,10 +137,7 @@ public class TagProcessor {
 
     highway.setNameList(nameList);
 
-    if (!typeMap.containsKey(highway.getType())) {
-      typeMap.put(highway.getType(), Long.valueOf(typeMap.size()));
-    }
-
+    addToTypeList(highway.getType());
     tags.add(highway);
   }
 
@@ -148,25 +148,30 @@ public class TagProcessor {
 
     address.setId(entity.getId());
     address.setOriginEntity(entity.getType());
+    address.setType("addr");
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
-      address.setType("addr");
 
-      if (key.startsWith("addr")) {
+      if (key.startsWith("addr:")) {
         String addressType = key.split(":")[1];
         if (addressType.equalsIgnoreCase("housenumber")) {
-          address.setHousenumber(value);
+          address.setHouseNumber(value);
         } else if (addressType.equalsIgnoreCase("street")) {
-          address.setStreet(value);
+          address.setStreetName(value);
         }
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
       }
-      if (key.equalsIgnoreCase("postal_code") || key.equalsIgnoreCase("addr:postcode")) {
+      if (key.equalsIgnoreCase("postal_code") || key.equalsIgnoreCase("addr:postcode")) {  // TODO: do we really need these? probably not! (too specific)
         processPostalCode(entity, tag, address);
       }
+    }
+
+    // We don't want addresses without names AND refs
+    if (nameList.isEmpty() || address.getRef() == null) {
+      return;
     }
 
     address.setNameList(nameList);
@@ -176,13 +181,10 @@ public class TagProcessor {
 
   // We allow for duplicate postcodes so that we can then store all locations for a given post_code (and combine the area using PostGIS)
   private void processPostalCode(Entity entity, Tag tag, GenericTag genericTag) {
-    String value = tag.getValue();
-    String splitter = ";";
-    if (value.contains(",")) splitter = ",";
-    String[] values = value.split(splitter); // sometimes we have more than one postcode separated by a comma or semi-colon
+    String[] values = tag.getValue().split(",|;"); // sometimes we have more than one postcode separated by a comma or semi-colon
 
     for (String code : values) {
-      PostalCode postalCode = new PostalCode(code);
+      PostalCode postalCode = new PostalCode(code.trim()); // trim whitespace as some postcodes are badly formatted
       postalCode.setId(entity.getId());
       postalCode.setType(entity.getType().toString());
       postalCode.setOriginEntity(entity.getType());

@@ -1,5 +1,7 @@
 package org.pit.fetegeo.importer.processors;
 
+import org.pit.fetegeo.importer.objects.Constants;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -10,19 +12,26 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HashMaker {
   private static MessageDigest md;
-  private static StringBuilder sb;
 
   static {
     try {
       md = MessageDigest.getInstance("MD5");
     } catch (NoSuchAlgorithmException e) {
+      System.err.println("Could not get MD5 instance. Something must be wrong with Java!");
+      System.err.println(e);
     }
   }
 
-
+  /*
+    Returns the MD5 hash of a String, returns null if string empty or null
+   */
   public static String getMD5Hash(String input) {
-    sb = new StringBuilder();
-    input = input.trim().toLowerCase();
+    if (input == null || input.isEmpty()) {
+      return null;
+    }
+
+    input = input.trim().toLowerCase(); // The input is trimmed and set to lowercase as fetegeo only handles lowercase
+    StringBuilder sb = new StringBuilder();
 
     for (byte b : md.digest(input.getBytes())) {
       sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));

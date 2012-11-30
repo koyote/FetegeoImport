@@ -19,7 +19,11 @@ public abstract class GenericTag {
   private List<Name> nameList;
   private EntityType originEntity;
   private Long postCodeId;
-  private static Map<String, Long> typeMap = new HashMap<String, Long>();
+  private static final Map<String, Long> typeMap;
+
+  static {
+    typeMap = new HashMap<String, Long>();
+  }
 
   public Long getId() {
     return id;
@@ -37,7 +41,7 @@ public abstract class GenericTag {
     this.type = type;
   }
 
-  public List<Name> getNameList() {
+  List<Name> getNameList() {
     return nameList;
   }
 
@@ -53,7 +57,7 @@ public abstract class GenericTag {
     this.originEntity = originEntity;
   }
 
-  public Long getPostCodeId() {
+  Long getPostCodeId() {
     return postCodeId;
   }
 
@@ -65,12 +69,11 @@ public abstract class GenericTag {
     return typeMap;
   }
 
-  public void write(CleverWriter copyFileWriter) {
+  public abstract void write();
+
+  void write(CleverWriter copyFileWriter) {
     copyFileWriter.writeField(this.getId());                  // write OSM_ID
     copyFileWriter.writeField(typeMap.get(this.getType()));   // write TYPE_ID
   }
 
-  public void write(CleverWriter copyFileWriter, CleverWriter nameWriter) {
-    write(copyFileWriter);
-  }
 }

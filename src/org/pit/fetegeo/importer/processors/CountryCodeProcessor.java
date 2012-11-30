@@ -18,9 +18,11 @@ import java.util.Map;
 public class CountryCodeProcessor {
 
   private final static Map<String, Long> countryCodeMap = new HashMap<String, Long>();
-
   private final CleverWriter countryCodeWriter;
 
+  /*
+   Constructor takes a country writer object as parameter and immediately populates the countryCodeMap and country.txt
+  */
   public CountryCodeProcessor(CleverWriter countryCodeWriter) {
     this.countryCodeWriter = countryCodeWriter;
 
@@ -31,6 +33,10 @@ public class CountryCodeProcessor {
     }
   }
 
+  /*
+   This method finds country codes from COUNTRY_ISO_CODE_URL, parses them and then adds them to
+    the countryCodeMap and country.txt file for subsequent database copy.
+  */
   private void fetchAndSaveCountries() throws IOException {
     URL url = new URL(Constants.COUNTRY_ISO_CODE_URL);
     InputStream inputStream = url.openStream();
@@ -73,6 +79,9 @@ public class CountryCodeProcessor {
     inputStream.close();
   }
 
+  /*
+   Returns the database id of a specified ISO country code
+  */
   public static Long findCountryId(String country) {
     return countryCodeMap.get(country);
   }

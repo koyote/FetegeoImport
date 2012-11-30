@@ -1,50 +1,38 @@
 package org.pit.fetegeo.importer.objects;
 
-import org.pit.fetegeo.importer.processors.CleverWriter;
-import org.pit.fetegeo.importer.processors.HashMaker;
-import org.pit.fetegeo.importer.processors.LocationProcessor;
-
 /**
  * Author: Pit Apps
  * Date: 10/26/12
  * Time: 3:37 PM
  */
-public class Address extends GenericTag {
+public class Address extends Road {
 
-  private String street;
-  private String housenumber;
-  public static Long addressId = 0l;
-  public static Long addressNameId = 0l;
+  private String streetName;
+  private String houseNumber;
 
-  public void setStreet(String street) {
-    this.street = street;
+  public void setStreetName(String streetName) {
+    this.streetName = streetName;
   }
 
-  public void setHousenumber(String housenumber) {
-    this.housenumber = housenumber;
+  public void setHouseNumber(String houseNumber) {
+    this.houseNumber = houseNumber;
   }
 
-  public String print() {
-    return housenumber + " " + street;
+  /*
+    Format houseNumber correctly if it exists
+   */
+  private String getHouseNumber() {
+    if (houseNumber != null && !houseNumber.isEmpty()) {
+      return houseNumber + ", ";
+    }
+    return "";
   }
 
-  public void write(CleverWriter addressWriter, CleverWriter nameWriter) {
-    addressWriter.writeField(addressId);
-
-    super.write(addressWriter, nameWriter);
-
-    addressWriter.writeField(LocationProcessor.findLocation(this));
-    addressWriter.writeField(this.getPostCodeId());
-
-    nameWriter.writeField(addressNameId++);
-    nameWriter.writeField(addressId);
-    nameWriter.writeField(Constants.NULL_STRING); // language_id
-    nameWriter.writeField(GenericTag.getTypeMap().get("name"));     // name_type
-    nameWriter.writeField(this.print());
-    nameWriter.writeField(HashMaker.getMD5Hash(this.print()));
-    nameWriter.endRecord();
-
-    addressId++;
-    addressWriter.endRecord();
+  public String getRef() {
+    if (streetName == null || streetName.isEmpty()) {
+      return null;
+    }
+    return getHouseNumber() + streetName;
   }
+
 }

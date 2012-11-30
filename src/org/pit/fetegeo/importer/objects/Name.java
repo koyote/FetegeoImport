@@ -14,7 +14,7 @@ public class Name {
   private String nameType;
   private final String name;
   private Long languageId;
-  private boolean localised;
+  private final boolean localised;
 
   public Name(String name, String nameType) {
     this.name = name;
@@ -23,7 +23,7 @@ public class Name {
     // Set language
     if (nameType.startsWith("name:")) {
       this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1]);
-      this.nameType = "name:";
+      this.nameType = "name:";                                                     // we're using 'name:' as a type for localised names
       this.localised = true;
     } else {
       this.localised = false;
@@ -32,7 +32,7 @@ public class Name {
     // Check if the type has been added already
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     if (!typeMap.containsKey(this.nameType)) {
-      typeMap.put(this.nameType, Long.valueOf(typeMap.size()));
+      typeMap.put(this.nameType, (long) typeMap.size());
     }
   }
 
@@ -50,5 +50,16 @@ public class Name {
 
   public boolean isLocalised() {
     return localised;
+  }
+
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{ ");
+    sb.append("name : ").append(name);
+    sb.append("nameType : ").append(nameType);
+    sb.append("languageId : ").append(languageId);
+    sb.append("localised : ").append(localised);
+    sb.append("}");
+    return sb.toString();
   }
 }

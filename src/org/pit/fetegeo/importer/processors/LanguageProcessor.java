@@ -17,10 +17,12 @@ import java.util.Map;
  */
 public class LanguageProcessor {
 
-  private final static Map<String, Long> languageMap = new HashMap<String, Long>();
-
+  private final static Map<String, Long> langMap = new HashMap<String, Long>();
   private final CleverWriter langWriter;
 
+  /*
+    Constructor takes a language writer object as parameter and immediately populates the langMap and lang.txt
+   */
   public LanguageProcessor(CleverWriter langWriter) {
     this.langWriter = langWriter;
 
@@ -31,6 +33,10 @@ public class LanguageProcessor {
     }
   }
 
+  /*
+    This method finds language codes from LANG_ISO_CODE_URL, parses them and then adds them to
+     the langMap and lang.txt file for subsequent database copy.
+   */
   private void fetchAndSaveLangs() throws IOException {
     URL url = new URL(Constants.LANG_ISO_CODE_URL);
     InputStream inputStream = url.openStream();
@@ -54,7 +60,7 @@ public class LanguageProcessor {
 
       if (!iso639_1.isEmpty()) {
         langWriter.writeField(iso639_1);
-        languageMap.put(iso639_1, langId);
+        langMap.put(iso639_1, langId);
       } else {
         langWriter.writeField(Constants.NULL_STRING);
       }
@@ -62,7 +68,7 @@ public class LanguageProcessor {
       if (!iso639_2.isEmpty()) {
         iso639_2 = iso639_2.substring(0, 3); // cut off B and T
         langWriter.writeField(iso639_2);
-        languageMap.put(iso639_2, langId);
+        langMap.put(iso639_2, langId);
       } else {
         langWriter.writeField(Constants.NULL_STRING);
       }
@@ -76,8 +82,11 @@ public class LanguageProcessor {
     inputStream.close();
   }
 
+  /*
+    Returns the database id of a specified ISO language code
+   */
   public static Long findLanguageId(String code) {
-    return languageMap.get(code);
+    return langMap.get(code);
   }
 
 }

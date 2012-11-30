@@ -9,7 +9,8 @@ import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.lifecycle.CompletableContainer;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
-import org.pit.fetegeo.importer.objects.*;
+import org.pit.fetegeo.importer.objects.Constants;
+import org.pit.fetegeo.importer.objects.GenericTag;
 import org.pit.fetegeo.importer.processors.*;
 
 import java.io.File;
@@ -21,33 +22,22 @@ public class FetegeoImportTask implements Sink {
   private final LocationProcessor locationProcessor;
   private final TagProcessor tagProcessor;
 
-  private final CompletableContainer container;
-  private final CleverWriter addressWriter;
-  private final CleverWriter addressNameWriter;
-  private final CleverWriter placeWriter;
-  private final CleverWriter placeNameWriter;
-  private final CleverWriter postCodeWriter;
+  public static final CompletableContainer container = new CompletableContainer();
+
   private final CleverWriter typeWriter;
 
-  public FetegeoImportTask(final File outdir) {
+  public FetegeoImportTask(final File outDir) {
 
-    String outPath = outdir.getAbsolutePath();
-    System.out.println("The Output directory is: " + outPath);
+    Constants.OUT_PATH = outDir.getAbsolutePath();
+    System.out.println("The Output directory is: " + Constants.OUT_PATH);
 
-    container = new CompletableContainer();
-
-    new LanguageProcessor(container.add(new CleverWriter(new File(outPath, "lang.txt"))));
-    new CountryCodeProcessor(container.add(new CleverWriter(new File(outPath, "country.txt"))));
+    new LanguageProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "lang.txt"))));
+    new CountryCodeProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "country.txt"))));
 
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
 
-    addressWriter = container.add(new CleverWriter(new File(outPath, "address.txt")));
-    addressNameWriter = container.add(new CleverWriter(new File(outPath, "address_name.txt")));
-    placeWriter = container.add(new CleverWriter(new File(outPath, "place.txt")));
-    placeNameWriter = container.add(new CleverWriter(new File(outPath, "place_name.txt")));
-    postCodeWriter = container.add(new CleverWriter(new File(outPath, "postcode.txt")));
-    typeWriter = container.add(new CleverWriter(new File(outPath, "type.txt")));
+    typeWriter = container.add(new CleverWriter(new File(Constants.OUT_PATH, "type.txt")));
   }
 
 
@@ -63,13 +53,7 @@ public class FetegeoImportTask implements Sink {
 
     // Write to file
     for (GenericTag tag : tagList) {
-      if (tag instanceof Place) {
-        tag.write(placeWriter, placeNameWriter);
-      } else if (tag instanceof Address || tag instanceof Highway) {
-        tag.write(addressWriter, addressNameWriter);
-      } else if (tag instanceof PostalCode) {
-        tag.write(postCodeWriter);
-      }
+      tag.write();
     }
   }
 
@@ -88,8 +72,8 @@ public class FetegeoImportTask implements Sink {
   private void writeTypes() {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     for (String type : typeMap.keySet()) {
-      typeWriter.writeField(typeMap.get(type));
-      typeWriter.writeField(type);
+      typeWriter.writeField(typeMap.get(type));                   // type_id
+      typeWriter.writeField(type);                                // name
       typeWriter.endRecord();
     }
   }
