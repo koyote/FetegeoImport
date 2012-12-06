@@ -52,8 +52,8 @@ public class CountryCodeProcessor {
 
       if (tokens.length < 4) continue;
 
-      iso3166_2 = tokens[0].trim();
-      iso3166_3 = tokens[1].trim();
+      iso3166_2 = tokens[0].trim().toUpperCase();
+      iso3166_3 = tokens[1].trim().toUpperCase();
       name = tokens[3].trim();        // English name
 
       countryCodeWriter.writeField(countryId);
@@ -70,6 +70,7 @@ public class CountryCodeProcessor {
         countryCodeWriter.writeField(Constants.NULL_STRING);
       }
       countryCodeMap.put(name, countryId);
+      countryCodeWriter.writeField(name);
 
       countryCodeWriter.endRecord();
       countryId++;

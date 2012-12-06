@@ -78,7 +78,8 @@ DROP TABLE country CASCADE;
 CREATE TABLE country (
  country_id bigserial,
  iso3166_2 char(2),
- iso3166_3 char(3)
+ iso3166_3 char(3),
+ name text
 );
 
 \copy road FROM 'road.txt'
@@ -95,13 +96,13 @@ ALTER TABLE place ADD COLUMN parent_id bigint;
 
 -- Make some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
-CREATE INDEX address_location_idx ON address USING GIST(location);
+CREATE INDEX road_location_idx ON road USING GIST(location);
 CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
 CREATE INDEX place_country_idx ON place USING btree(country_id);
 
 -- Cluster it all!
 CLUSTER place_location_idx ON place;
-CLUSTER address_location_idx ON address;
+CLUSTER road_location_idx ON road;
 CLUSTER postcode_location_idx ON postcode;
 
 VACUUM ANALYZE;
@@ -142,15 +143,15 @@ WHERE p2.country_id IS NOT NULL AND ST_Contains(p2.location, place.location);
 UPDATE place
 SET parent_id = b_id
 FROM (
-SELECT small.place_id as s_id, big.place_id as b_id
-FROM place as small, place as big
-WHERE ST_Area(big.location)=
-	(SELECT MIN(ST_Area(b2.location))
-	 FROM place as b2
-	 WHERE NOT ST_Equals(small.location, b2.location)
-	 AND ST_Covers(b2.location, small.location)
-	 AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'MultiPolygon')
-	 )
+  SELECT small.place_id as s_id, big.place_id as b_id
+  FROM place as small, place as big
+  WHERE ST_Area(big.location)= (
+	  SELECT MIN(ST_Area(b2.location))
+	  FROM place as b2
+	  WHERE NOT ST_Equals(small.location, b2.location)
+	  AND ST_Covers(b2.location, small.location)
+	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'MultiPolygon')
+	  )
 ) pp
 WHERE place_id = s_id;
 

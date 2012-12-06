@@ -22,7 +22,7 @@ public class Name {
 
     // Set language
     if (nameType.startsWith("name:")) {
-      this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1]);
+      this.languageId = LanguageProcessor.findLanguageId(nameType.split(":")[1].toUpperCase());  // language codes are saved as UpperCase
       this.nameType = "name:";                                                     // we're using 'name:' as a type for localised names
       this.localised = true;
     } else {

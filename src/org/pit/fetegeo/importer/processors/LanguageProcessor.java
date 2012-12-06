@@ -29,13 +29,14 @@ public class LanguageProcessor {
     try {
       fetchAndSaveLangs();
     } catch (IOException ioe) {
-      System.out.print(ioe);
+      System.out.println(ioe);
     }
   }
 
   /*
     This method finds language codes from LANG_ISO_CODE_URL, parses them and then adds them to
      the langMap and lang.txt file for subsequent database copy.
+     TODO: if more than one code for a language, merge it somehow
    */
   private void fetchAndSaveLangs() throws IOException {
     URL url = new URL(Constants.LANG_ISO_CODE_URL);
@@ -50,11 +51,11 @@ public class LanguageProcessor {
 
       String[] tokens = line.split(";");
 
-      if (tokens.length != 4) continue;
+      if (tokens.length < 3) continue;
 
-      iso639_1 = tokens[0];
-      iso639_2 = tokens[1];
-      name = tokens[2];
+      iso639_1 = tokens[0].trim().toUpperCase();
+      iso639_2 = tokens[1].trim().toUpperCase();
+      name = tokens[2].trim();
 
       langWriter.writeField(langId);
 
