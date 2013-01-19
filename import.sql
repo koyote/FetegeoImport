@@ -113,6 +113,22 @@ SET location = ST_CollectionHomogenize(location);
 UPDATE postcode
 SET location = ST_CollectionHomogenize(location);
 
+UPDATE place
+SET location = ST_MakeValid(location)
+WHERE GeometryType(location) <> 'GEOMETRYCOLLECTION';
+
+UPDATE postcode
+SET location = ST_MakeValid(location)
+WHERE GeometryType(location) <> 'GEOMETRYCOLLECTION';
+
+UPDATE place
+SET location = null
+WHERE NOT ST_IsValid(location);
+
+UPDATE postcode
+SET location = null
+WHERE NOT ST_IsValid(location);
+
 UPDATE postcode
 SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
 WHERE ST_BuildArea(location) IS NOT NULL;
@@ -122,7 +138,7 @@ UPDATE place
 SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
 WHERE ST_BuildArea(location) IS NOT NULL;
 
-SELECT UpdateGeometrySRID('place','location',4326); -- NO idea why we need this? CollectionHomogenize messes some entries up!
+SELECT UpdateGeometrySRID('place','location',4326);
 
 -- Update postcodes with their country
 ---- TODO: contains vs covers vs within? (they all seem to perform exactly the same)

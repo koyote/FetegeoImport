@@ -28,8 +28,8 @@ public class FetegeoImportTask implements Sink {
 
   public FetegeoImportTask(final File outDir) {
 
-    Constants.OUT_PATH = outDir.getAbsolutePath();
-    System.out.println("The Output directory is: " + Constants.OUT_PATH);
+    Constants.OUT_PATH = outDir;
+    System.out.println("The Output directory is: " + Constants.OUT_PATH.getAbsolutePath());
 
     new LanguageProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "lang.txt"))));
     new CountryCodeProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "country.txt"))));
@@ -59,7 +59,6 @@ public class FetegeoImportTask implements Sink {
 
   @Override
   public void complete() {
-    locationProcessor.printSize();
     writeTypes();
     container.complete();
   }
@@ -67,6 +66,7 @@ public class FetegeoImportTask implements Sink {
   @Override
   public void release() {
     container.release();
+    locationProcessor.completeAndRelease();
   }
 
   private void writeTypes() {

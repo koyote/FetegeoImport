@@ -30,7 +30,7 @@ public abstract class Road extends GenericTag {
   public void write() {
     roadWriter.writeField(roadId);                                       // address_id
     super.write(roadWriter);                                             // OSM_ID, TYPE_ID
-    roadWriter.writeField(LocationProcessor.findLocation(this));         // location
+    roadWriter.writeField(LocationProcessor.findLocation());         // location
     roadWriter.writeField(this.getPostCodeId());                         // postcode_id
 
     for (Name name : this.getNameList()) {

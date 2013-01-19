@@ -35,7 +35,7 @@ public class PostalCode extends GenericTag {
   public void write() {
     postCodeWriter.writeField(postCodeId);                           // postcode_id
     super.write(postCodeWriter);                                     // OSM_ID, TYPE_ID
-    postCodeWriter.writeField(LocationProcessor.findLocation(this)); // location
+    postCodeWriter.writeField(LocationProcessor.findLocation()); // location
     postCodeWriter.writeField(postCode);                             // main
     postCodeWriter.writeField(Constants.NULL_STRING);                // sup; TODO: IMPLEMENT THIS
     postCodeWriter.endRecord();

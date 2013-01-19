@@ -1,18 +1,15 @@
 package org.pit.fetegeo.importer.processors;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
-import org.openstreetmap.osmosis.pgsimple.common.PointBuilder;
-import org.openstreetmap.osmosis.pgsimple.common.PolygonBuilder;
-import org.pit.fetegeo.importer.objects.GenericTag;
-import org.postgis.Geometry;
-import org.postgis.GeometryCollection;
-import org.postgis.LineString;
-import org.postgis.Point;
+import org.openstreetmap.osmosis.core.lifecycle.CompletableContainer;
+import org.openstreetmap.osmosis.core.store.*;
+import org.pit.fetegeo.importer.objects.Constants;
+import org.postgis.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: Pit Apps
@@ -21,112 +18,143 @@ import java.util.Map;
  */
 public class LocationProcessor {
 
-  private static Map<Long, Point> nodeMap;
-  private static Map<Long, Geometry> wayMap;
-  private static Map<Long, Geometry> relationMap;
+  private static Geometry currentLocation;
 
-  private final PointBuilder pointBuilder;
-  private final PolygonBuilder polygonBuilder;
+  private static CompletableContainer storeContainer;
+
+  private static RandomAccessObjectStore<CleverPoint> nodeOS;
+  private static RandomAccessObjectStoreReader<CleverPoint> nodeReader;
+  private static IndexStore<Long, LongLongIndexElement> nodeIDX;
+  private static IndexStoreReader<Long, LongLongIndexElement> nodeIDXReader;
+
+  private static RandomAccessObjectStore<Way> wayOS;
+  private static RandomAccessObjectStoreReader<Way> wayReader;
+  private static IndexStore<Long, LongLongIndexElement> wayIDX;
+  private static IndexStoreReader<Long, LongLongIndexElement> wayIDXReader;
 
   public LocationProcessor() {
-    pointBuilder = new PointBuilder();
-    polygonBuilder = new PolygonBuilder();
-    nodeMap = new HashMap<Long, Point>();
-    wayMap = new HashMap<Long, Geometry>();
-    relationMap = new HashMap<Long, Geometry>();
+
+    storeContainer = new CompletableContainer();
+
+    try {
+      File nodeOSFile = File.createTempFile("nodeOS-", ".tmp", Constants.OUT_PATH);
+      File nodeIDXFile = File.createTempFile("nodeIDX-", ".tmp", Constants.OUT_PATH);
+      nodeOSFile.deleteOnExit();
+      nodeIDXFile.deleteOnExit();
+      nodeOS = storeContainer.add(new RandomAccessObjectStore<CleverPoint>(new SingleClassObjectSerializationFactory(CleverPoint.class), nodeOSFile));
+      nodeIDX = storeContainer.add(new IndexStore<Long, LongLongIndexElement>(LongLongIndexElement.class, new ComparableComparator<Long>(), nodeIDXFile));
+
+      File wayOSFile = File.createTempFile("wayOS-", ".tmp", Constants.OUT_PATH);
+      File wayIDXFile = File.createTempFile("wayIDX-", ".tmp", Constants.OUT_PATH);
+      wayOSFile.deleteOnExit();
+      wayIDXFile.deleteOnExit();
+      wayOS = storeContainer.add(new RandomAccessObjectStore<Way>(new SingleClassObjectSerializationFactory(Way.class), wayOSFile));
+      wayIDX = storeContainer.add(new IndexStore<Long, LongLongIndexElement>(LongLongIndexElement.class, new ComparableComparator<Long>(), wayIDXFile));
+    } catch (IOException ioe) {
+      System.out.println("Could not create cache file " + ioe.getLocalizedMessage());
+    }
   }
 
+  /*
+    Processes Nodes and caches Ways and Relation to file if they're needed for location later on.
+    Sets currentLocation to the location found for the Entity
+   */
   public void process(Entity entity) {
 
     // Find out what we're dealing with
     switch (entity.getType()) {
       case Node:
-        process((Node) entity);
+        currentLocation = process((Node) entity);
         break;
       case Way:
-        process((Way) entity);
+        currentLocation = process((Way) entity);
+        cache((Way) entity);
         break;
       case Relation:
-        process((Relation) entity);
+        currentLocation = process((Relation) entity);
         break;
       default:
         break;
     }
   }
 
-  public static Geometry findLocation(GenericTag tag) {
-    switch (tag.getOriginEntity()) {
-      case Node:
-        return nodeMap.get(tag.getId());
-      case Way:
-        return wayMap.get(tag.getId());
-      case Relation:
-        return relationMap.get(tag.getId());
-      default:
-        return null;
+  /*
+    Returns Geometry of the last processed location.
+   */
+  public static Geometry findLocation() {
+    return currentLocation;
+  }
+
+  private static void cache(Way way) {
+    long offset = wayOS.add(way);
+    wayIDX.write(new LongLongIndexElement(way.getId(), offset));
+  }
+
+  private Geometry process(Node node) {
+    CleverPoint cp = new CleverPoint(node.getLatitude(), node.getLongitude());
+
+    long offset = nodeOS.add(cp);
+    nodeIDX.write(new LongLongIndexElement(node.getId(), offset));
+
+    return cp;
+  }
+
+  private static Geometry process(Way way) {
+    if (nodeReader == null) {
+      nodeOS.complete();
+      nodeReader = nodeOS.createReader();
     }
-  }
+    if (nodeIDXReader == null) {
+      nodeIDX.complete();
+      nodeIDXReader = nodeIDX.createReader();
+    }
 
-  private void process(Node node) {
-    Point point = pointBuilder.createPoint(node.getLatitude(), node.getLongitude());
-    nodeMap.put(node.getId(), point);
-  }
-
-  private void process(Way way) {
     List<WayNode> wayNodes = way.getWayNodes();
     Point[] points = new Point[wayNodes.size()];
 
     for (int i = 0; i < points.length; i++) {
-      points[i] = nodeMap.get(wayNodes.get(i).getNodeId());
+      try {
+        points[i] = nodeReader.get(nodeIDXReader.get(wayNodes.get(i).getNodeId()).getValue());
+      } catch (NoSuchIndexElementException nsiee) {
+        // continue (maybe we're importing an incomplete file; we'll do our best to display as much of the way as possible)
+      }
     }
 
     Geometry result;
 
     // If points make a circle, we have a polygon. otherwise we have a line
     if (points.length > 3 && points[0].equals(points[points.length - 1])) {
-      result = polygonBuilder.createPolygon(points);
+      result = new Polygon(new LinearRing[]{new LinearRing(points)});
     } else {
       result = new LineString(points);
-      result.setSrid(4326);
     }
-
-    wayMap.put(way.getId(), result);
-  }
-
-  private void process(Relation relation) {
-    List<Geometry> coordinateList = new ArrayList<Geometry>();
-    fetchRelationCoors(relation, coordinateList);
-    /*    int polygons = 0, lines = 0;
-
-    for (Geometry g : coordinateList) {
-      if (g instanceof Polygon) {
-        polygons++;
-      } else if (g instanceof LineString) {
-        lines++;
-      }
-    }*/
-
-    //Geometry result;
-
-    GeometryCollection result = new GeometryCollection(coordinateList.toArray(new Geometry[coordinateList.size()]));
-
-    // Find the most used way type and make it multi!
-    /*    if (lines > polygons) {
-      coordinateList = cleanList(coordinateList, Geometry.LINESTRING);
-      LineString[] lineArray = coordinateList.toArray(new LineString[coordinateList.size()]);
-      result = new MultiLineString(lineArray);
-    } else {
-      coordinateList = cleanList(coordinateList, Geometry.POLYGON);
-      Polygon[] polyArray = coordinateList.toArray(new Polygon[coordinateList.size()]);
-      result = new MultiPolygon(polyArray);
-    }*/
     result.setSrid(4326);
 
-    relationMap.put(relation.getId(), result);
+    return result;
   }
 
-  private void fetchRelationCoors(Relation relation, List<Geometry> coordinateList) {
-    Geometry geometry;
+  private static Geometry process(Relation relation) {
+    if (wayReader == null) {
+      wayOS.complete();
+      wayReader = wayOS.createReader();
+    }
+
+    if (wayIDXReader == null) {
+      wayIDX.complete();
+      wayIDXReader = wayIDX.createReader();
+    }
+
+    List<Geometry> coordinateList = new ArrayList<Geometry>();
+    fetchRelationCoors(relation, coordinateList);
+
+    GeometryCollection result = new GeometryCollection(coordinateList.toArray(new Geometry[coordinateList.size()]));
+    result.setSrid(4326);
+
+
+    return result;
+  }
+
+  private static void fetchRelationCoors(Relation relation, List<Geometry> coordinateList) {
     for (RelationMember relationMember : relation.getMembers()) {
 
       // only care about outer roles (maybe inner too?)
@@ -139,9 +167,15 @@ public class LocationProcessor {
           // we don't care about Nodes as these are not used for roads or bounds (a part from designating the capital and other useless stuff)
           break;
         case Way:
-          if ((geometry = wayMap.get(relationMember.getMemberId())) != null) {
-            coordinateList.add(geometry);
+          try {
+            Way way = wayReader.get(wayIDXReader.get(relationMember.getMemberId()).getValue());
+            if (way != null) {
+              coordinateList.add(process(way));
+            }
+          } catch (NoSuchIndexElementException nsiee) {
+            break;
           }
+
           break;
         case Relation:
           /*Geometry otherRelation = relationMap.get(relationMember.getMemberId());
@@ -181,7 +215,9 @@ public class LocationProcessor {
     return cleanedList;
   }
 
-  public void printSize() {
-    System.out.println("Nodes: " + nodeMap.size() + ", Ways: " + wayMap.size() + ", Relations: " + relationMap.size());
+  public void completeAndRelease() {
+    storeContainer.complete();
+    storeContainer.release();
   }
+
 }

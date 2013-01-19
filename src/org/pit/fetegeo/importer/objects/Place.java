@@ -46,7 +46,7 @@ public class Place extends GenericTag {
   public void write() {
     placeWriter.writeField(placeId);                                                 // place_id
     super.write(placeWriter);                                                        // OSM_ID, TYPE_ID
-    placeWriter.writeField(LocationProcessor.findLocation(this));                    // location
+    placeWriter.writeField(LocationProcessor.findLocation());                    // location
     placeWriter.writeField(this.getPostCodeId());                                    // postcode_id
     placeWriter.writeField(this.getCountryId());                                     // country_id
     placeWriter.writeField(this.getPopulation());                                    // population
