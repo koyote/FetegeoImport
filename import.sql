@@ -107,47 +107,31 @@ CLUSTER postcode_location_idx ON postcode;
 
 VACUUM ANALYZE;
 
+---- Clean up locations (make linestring polygons if they are etc)
+-- Do not change order of BuildArea vs CollectionHomogenize! Weird things happen!
+UPDATE postcode
+SET location = ST_BuildArea(location)
+WHERE ST_BuildArea(location) IS NOT NULL;
+
+UPDATE place
+SET location = ST_BuildArea(location)
+WHERE ST_BuildArea(location) IS NOT NULL;
+
 UPDATE place
 SET location = ST_CollectionHomogenize(location);
 
 UPDATE postcode
 SET location = ST_CollectionHomogenize(location);
 
-UPDATE place
-SET location = ST_MakeValid(location)
-WHERE GeometryType(location) <> 'GEOMETRYCOLLECTION';
 
-UPDATE postcode
-SET location = ST_MakeValid(location)
-WHERE GeometryType(location) <> 'GEOMETRYCOLLECTION';
-
-UPDATE place
-SET location = null
-WHERE NOT ST_IsValid(location);
-
-UPDATE postcode
-SET location = null
-WHERE NOT ST_IsValid(location);
-
-UPDATE postcode
-SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
-WHERE ST_BuildArea(location) IS NOT NULL;
-
--- Clean up locations (make linestring polygons if they are etc)
-UPDATE place
-SET location = ST_BuildArea(location)  -- TODO: ST_UNION NEEDED?
-WHERE ST_BuildArea(location) IS NOT NULL;
-
-SELECT UpdateGeometrySRID('place','location',4326);
-
--- Update postcodes with their country
----- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
+---- Update postcodes with their country
+-- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
 UPDATE postcode
 SET country_id = place.country_id
 FROM place
 WHERE place.country_id IS NOT NULL AND ST_Contains(place.location, postcode.location);
 
--- Update place's country_id
+---- Update place's country_id
 -- TODO: Combine this and the next query somehow?
 UPDATE place
 SET country_id = p2.country_id
@@ -155,7 +139,7 @@ FROM place as p2
 WHERE p2.country_id IS NOT NULL AND ST_Contains(p2.location, place.location);
 
 ---- Update place's parents
----- TODO: do some performance testing and sanity checks  (Maybe cache ST_Area on Polygons?)
+-- TODO: do some performance testing and sanity checks  (Maybe cache ST_Area on Polygons?)
 UPDATE place
 SET parent_id = b_id
 FROM (

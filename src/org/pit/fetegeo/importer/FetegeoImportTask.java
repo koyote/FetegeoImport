@@ -21,10 +21,9 @@ public class FetegeoImportTask implements Sink {
 
   private final LocationProcessor locationProcessor;
   private final TagProcessor tagProcessor;
+  private final CleverWriter typeWriter;
 
   public static final CompletableContainer container = new CompletableContainer();
-
-  private final CleverWriter typeWriter;
 
   public FetegeoImportTask(final File outDir) {
 

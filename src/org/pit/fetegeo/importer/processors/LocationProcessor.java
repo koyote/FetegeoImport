@@ -9,7 +9,9 @@ import org.postgis.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Pit Apps
@@ -32,10 +34,13 @@ public class LocationProcessor {
   private static IndexStore<Long, LongLongIndexElement> wayIDX;
   private static IndexStoreReader<Long, LongLongIndexElement> wayIDXReader;
 
+  private static Map<Long, Geometry> relationMap = new HashMap<Long, Geometry>();
+
   public LocationProcessor() {
 
     storeContainer = new CompletableContainer();
 
+    // Create temp files for locations
     try {
       File nodeOSFile = File.createTempFile("nodeOS-", ".tmp", Constants.OUT_PATH);
       File nodeIDXFile = File.createTempFile("nodeIDX-", ".tmp", Constants.OUT_PATH);
@@ -68,7 +73,7 @@ public class LocationProcessor {
         break;
       case Way:
         currentLocation = process((Way) entity);
-        cache((Way) entity);
+        wayIDX.write(new LongLongIndexElement(entity.getId(), wayOS.add((Way) entity)));
         break;
       case Relation:
         currentLocation = process((Relation) entity);
@@ -85,16 +90,9 @@ public class LocationProcessor {
     return currentLocation;
   }
 
-  private static void cache(Way way) {
-    long offset = wayOS.add(way);
-    wayIDX.write(new LongLongIndexElement(way.getId(), offset));
-  }
-
   private Geometry process(Node node) {
     CleverPoint cp = new CleverPoint(node.getLatitude(), node.getLongitude());
-
-    long offset = nodeOS.add(cp);
-    nodeIDX.write(new LongLongIndexElement(node.getId(), offset));
+    nodeIDX.write(new LongLongIndexElement(node.getId(), nodeOS.add(cp)));
 
     return cp;
   }
@@ -123,7 +121,7 @@ public class LocationProcessor {
     Geometry result;
 
     // If points make a circle, we have a polygon. otherwise we have a line
-    if (points.length > 3 && points[0].equals(points[points.length - 1])) {
+    if (points.length >= 3 && points[0].equals(points[points.length - 1])) {
       result = new Polygon(new LinearRing[]{new LinearRing(points)});
     } else {
       result = new LineString(points);
@@ -138,31 +136,36 @@ public class LocationProcessor {
       wayOS.complete();
       wayReader = wayOS.createReader();
     }
-
     if (wayIDXReader == null) {
       wayIDX.complete();
       wayIDXReader = wayIDX.createReader();
     }
 
-    List<Geometry> coordinateList = new ArrayList<Geometry>();
-    fetchRelationCoors(relation, coordinateList);
+    List<Geometry> coordinateList = fetchRelationCoors(relation);
+
+    // If we could not find all the coordinates, we return null!
+    if (coordinateList == null) {
+      return null;
+    }
 
     GeometryCollection result = new GeometryCollection(coordinateList.toArray(new Geometry[coordinateList.size()]));
     result.setSrid(4326);
 
+    relationMap.put(relation.getId(), result);
 
     return result;
   }
 
-  private static void fetchRelationCoors(Relation relation, List<Geometry> coordinateList) {
+  private static List<Geometry> fetchRelationCoors(Relation relation) {
+    List<Geometry> coordinateList = new ArrayList<Geometry>();
+    int j = 0;
     for (RelationMember relationMember : relation.getMembers()) {
 
       // only care about outer roles (maybe inner too?)
       if (!relationMember.getMemberRole().equalsIgnoreCase("outer")) {
-        //continue;
+        continue;
       }
-      EntityType memberType = relationMember.getMemberType();
-      switch (memberType) {
+      switch (relationMember.getMemberType()) {
         case Node:
           // we don't care about Nodes as these are not used for roads or bounds (a part from designating the capital and other useless stuff)
           break;
@@ -173,16 +176,17 @@ public class LocationProcessor {
               coordinateList.add(process(way));
             }
           } catch (NoSuchIndexElementException nsiee) {
-            break;
+            return null; // if we can't find a way, then the relation might return a faulty geometry
           }
 
           break;
         case Relation:
-          /*Geometry otherRelation = relationMap.get(relationMember.getMemberId());
+          Geometry otherRelation = relationMap.get(relationMember.getMemberId());
           if (otherRelation != null) {
+            Geometry geometry;
             coordinateList.add(otherRelation);
             // We need to differentiate between the two different types of relations
-             if (otherRelation instanceof MultiPolygon) {
+            if (otherRelation instanceof MultiPolygon) {
               MultiPolygon multiPolygon = (MultiPolygon) otherRelation;
               for (int i = 0; i < multiPolygon.numPolygons(); i++) {
                 if ((geometry = multiPolygon.getPolygon(i)) != null) {
@@ -197,12 +201,15 @@ public class LocationProcessor {
                 }
               }
             }
-          }*/
+          } else {
+            return null;
+          }
           break;
         default:
           break;
       }
     }
+    return coordinateList;
   }
 
   private List<Geometry> cleanList(List<Geometry> list, int type) {
