@@ -150,7 +150,7 @@ FROM (
 	  FROM place as b2
 	  WHERE NOT ST_Equals(small.location, b2.location)
 	  AND ST_Covers(b2.location, small.location)
-	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'MultiPolygon')
+	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'ST_MultiPolygon')
 	  )
 ) pp
 WHERE place_id = s_id;
