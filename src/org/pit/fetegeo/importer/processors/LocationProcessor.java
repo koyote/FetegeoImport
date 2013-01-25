@@ -158,11 +158,10 @@ public class LocationProcessor {
 
   private static List<Geometry> fetchRelationCoors(Relation relation) {
     List<Geometry> coordinateList = new ArrayList<Geometry>();
-    int j = 0;
     for (RelationMember relationMember : relation.getMembers()) {
 
-      // only care about outer roles (maybe inner too?)
-      if (!relationMember.getMemberRole().equalsIgnoreCase("outer")) {
+      // only care about outer roles. Some ways are not tagged...
+      if (!relationMember.getMemberRole().equalsIgnoreCase("outer") && !relationMember.getMemberRole().isEmpty()) {
         continue;
       }
       switch (relationMember.getMemberType()) {
