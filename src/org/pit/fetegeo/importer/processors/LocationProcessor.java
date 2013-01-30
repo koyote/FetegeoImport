@@ -115,6 +115,7 @@ public class LocationProcessor {
         points[i] = nodeReader.get(nodeIDXReader.get(wayNodes.get(i).getNodeId()).getValue());
       } catch (NoSuchIndexElementException nsiee) {
         // continue (maybe we're importing an incomplete file; we'll do our best to display as much of the way as possible)
+        System.err.println("Could not find Node: " + wayNodes.get(i).getNodeId());
       }
     }
 
@@ -175,6 +176,7 @@ public class LocationProcessor {
               coordinateList.add(process(way));
             }
           } catch (NoSuchIndexElementException nsiee) {
+            System.err.println("Could not find Way: " + relationMember.getMemberId());
             return null; // if we can't find a way, then the relation might return a faulty geometry
           }
 

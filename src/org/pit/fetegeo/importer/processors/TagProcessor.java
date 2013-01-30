@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
 public class TagProcessor {
 
   private List<GenericTag> tags;
-  private static Pattern spacePcPattern = Pattern.compile("\\w+ \\w+");
-  private static Pattern dashPcPattern = Pattern.compile("\\w+-\\w+");
+  private static final Pattern spacePcPattern = Pattern.compile("\\w+ \\w+");
+  private static final Pattern dashPcPattern = Pattern.compile("\\w+-\\w+");
 
   public List<GenericTag> process(Entity entity) {
     String key, value;
@@ -209,7 +209,7 @@ public class TagProcessor {
         String[] multiPC = code.split("-");
         postalCode = new PostalCode(multiPC[0], multiPC[1]);
       } else {
-        postalCode = new PostalCode(code.trim());
+        postalCode = new PostalCode(code);
       }
 
       postalCode.setId(entity.getId());

@@ -92,6 +92,7 @@ CREATE TABLE country (
 \copy country FROM 'country.txt'
 
 ALTER TABLE postcode ADD COLUMN country_id bigint;
+ALTER TABLE postcode ADD COLUMN parent_id bigint;
 ALTER TABLE place ADD COLUMN parent_id bigint;
 
 -- Make some indices
@@ -158,6 +159,21 @@ FROM (
 	  )
 ) pp
 WHERE place_id = s_id;
+
+---- Update postcode's parents
+UPDATE postcode
+SET parent_id = b_id
+FROM (
+  SELECT small.postcode_id as s_id, big.place_id as b_id
+  FROM postcode as small, place as big
+  WHERE ST_Area(big.location)= (
+	  SELECT MIN(ST_Area(b2.location))
+	  FROM place as b2
+	  WHERE ST_Covers(b2.location, small.location)
+	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'ST_MultiPolygon')
+	  )
+) pp
+WHERE postcode_id = s_id;
 
 
 ---- TODO: Maybe this is faster:
