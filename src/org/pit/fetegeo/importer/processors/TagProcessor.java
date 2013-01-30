@@ -8,6 +8,7 @@ import org.pit.fetegeo.importer.objects.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Author: Pit Apps
@@ -17,6 +18,8 @@ import java.util.Map;
 public class TagProcessor {
 
   private List<GenericTag> tags;
+  private static Pattern spacePcPattern = Pattern.compile("\\w+ \\w+");
+  private static Pattern dashPcPattern = Pattern.compile("\\w+-\\w+");
 
   public List<GenericTag> process(Entity entity) {
     String key, value;
@@ -195,7 +198,20 @@ public class TagProcessor {
     String[] values = tag.getValue().split(",|;"); // sometimes we have more than one postcode separated by a comma or semi-colon
 
     for (String code : values) {
-      PostalCode postalCode = new PostalCode(code.trim()); // trim whitespace as some postcodes are badly formatted
+      code = code.trim();  // trim whitespace as some postcodes are badly formatted
+      PostalCode postalCode;
+
+      // Check if the postcode is a multi-postcode (some countries use dashes, others use spaces to separate them)
+      if (spacePcPattern.matcher(code).matches()) {
+        String[] multiPC = code.split(" ");
+        postalCode = new PostalCode(multiPC[0], multiPC[1]);
+      } else if (dashPcPattern.matcher(code).matches()) {
+        String[] multiPC = code.split("-");
+        postalCode = new PostalCode(multiPC[0], multiPC[1]);
+      } else {
+        postalCode = new PostalCode(code.trim());
+      }
+
       postalCode.setId(entity.getId());
       postalCode.setType(entity.getType().toString());
       postalCode.setOriginEntity(entity.getType());

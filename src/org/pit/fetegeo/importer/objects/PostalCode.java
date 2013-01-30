@@ -14,7 +14,8 @@ import java.io.File;
 public class PostalCode extends GenericTag {
 
   private static Long postCodeId = -1l;
-  private final String postCode;
+  private final String main;
+  private final String sup;
 
   private static final CleverWriter postCodeWriter;
 
@@ -22,9 +23,21 @@ public class PostalCode extends GenericTag {
     postCodeWriter = FetegeoImportTask.container.add(new CleverWriter(new File(Constants.OUT_PATH, "postcode.txt")));
   }
 
-
+  /*
+    Constructor for single postcode
+   */
   public PostalCode(String postCode) {
-    this.postCode = postCode;
+    this.main = postCode;
+    this.sup = null;
+    postCodeId++;
+  }
+
+  /*
+    Constructor for postcode with main and sup
+   */
+  public PostalCode(String main, String sup) {
+    this.main = main;
+    this.sup = sup;
     postCodeId++;
   }
 
@@ -35,9 +48,9 @@ public class PostalCode extends GenericTag {
   public void write() {
     postCodeWriter.writeField(postCodeId);                           // postcode_id
     super.write(postCodeWriter);                                     // OSM_ID, TYPE_ID
-    postCodeWriter.writeField(LocationProcessor.findLocation()); // location
-    postCodeWriter.writeField(postCode);                             // main
-    postCodeWriter.writeField(Constants.NULL_STRING);                // sup; TODO: IMPLEMENT THIS
+    postCodeWriter.writeField(LocationProcessor.findLocation());     // location
+    postCodeWriter.writeField(main);                                 // main
+    postCodeWriter.writeField(sup);                                  // sup;
     postCodeWriter.endRecord();
   }
 }
