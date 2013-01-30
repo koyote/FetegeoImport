@@ -123,6 +123,10 @@ SET location = ST_CollectionHomogenize(location);
 UPDATE postcode
 SET location = ST_CollectionHomogenize(location);
 
+UPDATE place
+SET location = null
+WHERE NOT ST_IsValid(location);
+
 
 ---- Update postcodes with their country
 -- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
@@ -154,5 +158,10 @@ FROM (
 	  )
 ) pp
 WHERE place_id = s_id;
+
+
+---- TODO: Maybe this is faster:
+-- select all polygon and multipolygon and order by st_area smallest descending
+-- If current element e1 covers a location that has smaller area e2 and e2 does not yet have a parent; set e2 parent to e1
 
 VACUUM ANALYZE;

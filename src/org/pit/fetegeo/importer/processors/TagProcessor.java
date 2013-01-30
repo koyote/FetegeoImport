@@ -71,7 +71,18 @@ public class TagProcessor {
       } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("population")) {
-        place.setPopulation(Long.valueOf(value));
+        try {
+          place.setPopulation(Long.valueOf(value));
+        }
+        // Some population numbers are given as '#### (YYYY)'...
+        catch (NumberFormatException nfe) {
+          value = value.replaceAll("\\([^\\(]*\\)", "");
+          try {
+            place.setPopulation(Long.valueOf(value));
+          } catch (NumberFormatException nfe2) {
+            // Not a number?
+          }
+        }
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, place);
       }
