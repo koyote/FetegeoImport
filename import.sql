@@ -29,27 +29,6 @@ CREATE TABLE place_name (
  name_hash varchar(32)
 );
 
-DROP TABLE road CASCADE;
-CREATE TABLE road (
- road_id bigserial,
- osm_id bigint,
- type_id bigint,
- location geometry,
- postcode_id bigint
-);
-
-DROP TABLE road_name CASCADE;
-CREATE TABLE road_name (
- road_name_id bigserial,
- road_id bigint,
- lang_id bigint,
- type_id bigint,
- name text,
- name_hash varchar(32),
- ref text,
- ref_hash varchar(32)
-);
-
 DROP TABLE lang CASCADE;
 CREATE TABLE lang (
  lang_id bigserial,
@@ -82,8 +61,6 @@ CREATE TABLE country (
  name text
 );
 
-\copy road FROM 'road.txt'
-\copy road_name FROM 'road_name.txt'
 \copy lang FROM 'lang.txt'
 \copy place FROM 'place.txt'
 \copy place_name FROM 'place_name.txt'

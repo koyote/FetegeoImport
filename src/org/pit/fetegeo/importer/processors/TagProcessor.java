@@ -35,9 +35,6 @@ public class TagProcessor {
         // TODO: limit this to only a couple values?
         processHighway(entity);
         break;
-      } else if (key.startsWith("addr")) {
-        processAddress(entity);    // TODO: IGNORE THIS TAG?
-        break;
       }
     }
     return tags;
@@ -123,7 +120,7 @@ public class TagProcessor {
   }
 
   private void processHighway(Entity entity) {
-    Highway highway = new Highway();
+    Place highway = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
 
@@ -137,15 +134,13 @@ public class TagProcessor {
         highway.setType(value);
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
-      } else if (key.equalsIgnoreCase("ref")) {
-        highway.setRef(value);
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, highway);
       }
     }
 
     // We don't want highways without names
-    if (nameList.isEmpty() && highway.getRef() == null) {
+    if (nameList.isEmpty()) {
       return;
     }
 
@@ -153,44 +148,6 @@ public class TagProcessor {
 
     addToTypeList(highway.getType());
     tags.add(highway);
-  }
-
-  private void processAddress(Entity entity) {
-    Address address = new Address();
-    List<Name> nameList = new ArrayList<Name>();
-    String key, value;
-
-    address.setId(entity.getId());
-    address.setOriginEntity(entity.getType());
-    address.setType("addr");
-
-    for (Tag tag : entity.getTags()) {
-      key = tag.getKey();
-      value = tag.getValue();
-
-      if (key.startsWith("addr:")) {
-        String addressType = key.split(":")[1];
-        if (addressType.equalsIgnoreCase("housenumber")) {
-          address.setHouseNumber(value);
-        } else if (addressType.equalsIgnoreCase("street")) {
-          address.setStreetName(value);
-        }
-      } else if (key.startsWith("name:") || key.endsWith("name")) {
-        nameList.add(new Name(value, key));
-      }
-      if (key.equalsIgnoreCase("postal_code") || key.equalsIgnoreCase("addr:postcode")) {  // TODO: do we really need these? probably not! (too specific)
-        processPostalCode(entity, tag, address);
-      }
-    }
-
-    // We don't want addresses without names AND refs
-    if (nameList.isEmpty() || address.getRef() == null) {
-      return;
-    }
-
-    address.setNameList(nameList);
-
-    tags.add(address);
   }
 
   // We allow for duplicate postcodes so that we can then store all locations for a given post_code (and combine the area using PostGIS)
@@ -217,6 +174,8 @@ public class TagProcessor {
       postalCode.setOriginEntity(entity.getType());
       tags.add(postalCode);
       genericTag.setPostCodeId(postalCode.getPostCodeId());
+
+      addToTypeList(postalCode.getType());
     }
   }
 
