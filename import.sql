@@ -70,13 +70,15 @@ CREATE TABLE country (
 
 ALTER TABLE postcode ADD COLUMN country_id bigint;
 ALTER TABLE postcode ADD COLUMN parent_id bigint;
+ALTER TABLE postcode ADD COLUMN area float;
 ALTER TABLE place ADD COLUMN parent_id bigint;
+ALTER TABLE place ADD COLUMN area float;
 
 -- Make some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
 CREATE INDEX road_location_idx ON road USING GIST(location);
 CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
-CREATE INDEX place_country_idx ON place USING btree(country_id);
+CREATE INDEX place_country_idx ON place(country_id);
 
 -- Cluster it all!
 CLUSTER place_location_idx ON place;
@@ -120,15 +122,23 @@ SET country_id = p2.country_id
 FROM place as p2
 WHERE p2.country_id IS NOT NULL AND ST_Contains(p2.location, place.location);
 
+-- Separately calculate area
+UPDATE place
+SET area = ST_Area(location);
+CREATE INDEX place_area_idx ON place(area);
+UPDATE postcode
+SET area = ST_Area(location);
+CREATE INDEX postcode_area_idx ON postcode(area);
+
 ---- Update place's parents
--- TODO: do some performance testing and sanity checks  (Maybe cache ST_Area on Polygons?)
+-- For some reason, the scheduler makes this nearly twice as fast as opposed to having WHERE big.area...
 UPDATE place
 SET parent_id = b_id
 FROM (
   SELECT small.place_id as s_id, big.place_id as b_id
   FROM place as small, place as big
-  WHERE ST_Area(big.location)= (
-	  SELECT MIN(ST_Area(b2.location))
+  WHERE ST_Area(big.location) = (
+	  SELECT MIN(b2.area)
 	  FROM place as b2
 	  WHERE NOT ST_Equals(small.location, b2.location)
 	  AND ST_Covers(b2.location, small.location)
@@ -144,7 +154,7 @@ FROM (
   SELECT small.postcode_id as s_id, big.place_id as b_id
   FROM postcode as small, place as big
   WHERE ST_Area(big.location)= (
-	  SELECT MIN(ST_Area(b2.location))
+	  SELECT MIN(b2.area)
 	  FROM place as b2
 	  WHERE NOT ST_Equals(small.location, b2.location)
 	  AND ST_Covers(b2.location, small.location)
