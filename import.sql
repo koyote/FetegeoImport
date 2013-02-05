@@ -1,13 +1,5 @@
 \timing
 
-DROP TYPE postcode_type CASCADE;
-CREATE TYPE postcode_type AS ENUM (
- 'Node',
- 'Way',
- 'Relation'
-);
-
-
 DROP TABLE place CASCADE;
 CREATE TABLE place (
   place_id bigserial,
@@ -41,7 +33,7 @@ DROP TABLE postcode CASCADE;
 CREATE TABLE postcode (
  postcode_id bigserial,
  osm_id bigint,
- type postcode_type,
+ type_id bigint,
  location geometry,
  main text,
  sup text
@@ -61,6 +53,7 @@ CREATE TABLE country (
  name text
 );
 
+---- Fill tables with data
 \copy lang FROM 'lang.txt'
 \copy place FROM 'place.txt'
 \copy place_name FROM 'place_name.txt'
@@ -68,21 +61,20 @@ CREATE TABLE country (
 \copy type FROM 'type.txt'
 \copy country FROM 'country.txt'
 
+---- Add some special columns which take data from PostGIS calculations later in this script
 ALTER TABLE postcode ADD COLUMN country_id bigint;
 ALTER TABLE postcode ADD COLUMN parent_id bigint;
 ALTER TABLE postcode ADD COLUMN area float;
 ALTER TABLE place ADD COLUMN parent_id bigint;
 ALTER TABLE place ADD COLUMN area float;
 
--- Make some indices
+---- Create some indices
 CREATE INDEX place_location_idx ON place USING GIST(location);
-CREATE INDEX road_location_idx ON road USING GIST(location);
 CREATE INDEX postcode_location_idx ON postcode USING GIST(location);
 CREATE INDEX place_country_idx ON place(country_id);
 
--- Cluster it all!
+---- Cluster it all!
 CLUSTER place_location_idx ON place;
-CLUSTER road_location_idx ON road;
 CLUSTER postcode_location_idx ON postcode;
 
 VACUUM ANALYZE;
@@ -103,26 +95,28 @@ SET location = ST_CollectionHomogenize(location);
 UPDATE postcode
 SET location = ST_CollectionHomogenize(location);
 
+---- Get rid of invalid locations
+--(TODO: maybe run Buffer or MakeValid on these)
 UPDATE place
 SET location = null
 WHERE NOT ST_IsValid(location);
 
+UPDATE postcode
+SET location = null
+WHERE NOT ST_IsValid(location);
 
----- Update postcodes with their country
--- TODO: contains vs covers vs within? (they all seem to perform exactly the same)
+---- Add postcodes' and places' country
 UPDATE postcode
 SET country_id = place.country_id
 FROM place
-WHERE place.country_id IS NOT NULL AND ST_Contains(place.location, postcode.location);
+WHERE place.country_id IS NOT NULL AND ST_Covers(place.location, postcode.location);
 
----- Update place's country_id
--- TODO: Combine this and the next query somehow?
 UPDATE place
 SET country_id = p2.country_id
 FROM place as p2
-WHERE p2.country_id IS NOT NULL AND ST_Contains(p2.location, place.location);
+WHERE p2.country_id IS NOT NULL AND ST_Covers(p2.location, place.location);
 
--- Separately calculate area
+---- Separately calculate area (speeds up the next updates)
 UPDATE place
 SET area = ST_Area(location);
 CREATE INDEX place_area_idx ON place(area);
@@ -131,7 +125,7 @@ SET area = ST_Area(location);
 CREATE INDEX postcode_area_idx ON postcode(area);
 
 ---- Update place's parents
--- For some reason, the scheduler makes this nearly twice as fast as opposed to having WHERE big.area...
+-- For some reason, the scheduler makes ST_Area+area nearly twice as fast as opposed to having 'WHERE big.area = MIN(b2.area)'...
 UPDATE place
 SET parent_id = b_id
 FROM (
