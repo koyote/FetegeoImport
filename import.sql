@@ -132,7 +132,7 @@ FROM (
 	  FROM place as b2
 	  WHERE NOT ST_Equals(small.location, b2.location)
 	  AND ST_Covers(b2.location, small.location)
-	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'ST_MultiPolygon')
+	  AND (ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon'))
 	  )
 ) pp
 WHERE place_id = s_id;
@@ -146,15 +146,43 @@ FROM (
   WHERE ST_Area(big.location)= (
 	  SELECT MIN(ST_Area(b2.location))
 	  FROM place as b2
-	  WHERE ST_Covers(b2.location, small.location)
-	  AND (ST_GeometryType(b2.location) = 'ST_Polygon' OR ST_GeometryType(b2.location) = 'ST_MultiPolygon')
+	  WHERE NOT ST_Equals(small.location, b2.location)
+	  AND ST_Covers(b2.location, small.location)
+	  AND (ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon'))
 	  )
 ) pp
 WHERE postcode_id = s_id;
 
 
----- TODO: Maybe this is faster:
+-- Turns out this is about 40% slower than the above :(
+-- Keeping it here for keepsakes...
+--
 -- select all polygon and multipolygon and order by st_area smallest descending
 -- If current element e1 covers a location that has smaller area e2 and e2 does not yet have a parent; set e2 parent to e1
+--CREATE OR REPLACE TYPE PlaceCombo AS (location geometry, parent_id bigint, place_id bigint);
+--
+--CREATE OR REPLACE FUNCTION place_parent() RETURNS boolean AS $$
+--DECLARE
+--    candidates PlaceCombo[];
+--    polygon PlaceCombo;
+--    candidate PlaceCombo;
+--BEGIN
+--  FOR polygon IN select location, parent_id, place_id from place where location is not null order by ST_Area(location) asc LOOP
+--    IF ST_GeometryType(polygon.location) in ('ST_Polygon','ST_MultiPolygon')  THEN
+--      FOREACH candidate IN ARRAY candidates LOOP
+--        IF candidate.parent_id IS NULL THEN
+--          IF ST_Covers(polygon.location, candidate.location) THEN
+--            candidate.parent_id := polygon.place_id;
+--            UPDATE place SET parent_id = polygon.place_id WHERE place_id = candidate.place_id;
+--          END IF;
+--        END IF;
+--      END LOOP;
+--    END IF;
+--    candidates := array_append(candidates, polygon);
+--  END LOOP;
+--  return true;
+--END;
+--$$
+--LANGUAGE plpgsql;
 
 VACUUM ANALYZE;
