@@ -17,7 +17,6 @@ public abstract class GenericTag {
   private Long id;
   private String type;
   private List<Name> nameList;
-  private EntityType originEntity;
   private Long postCodeId;
   private static final Map<String, Long> typeMap;
 
@@ -47,14 +46,6 @@ public abstract class GenericTag {
 
   public void setNameList(List<Name> nameList) {
     this.nameList = nameList;
-  }
-
-  public EntityType getOriginEntity() {
-    return originEntity;
-  }
-
-  public void setOriginEntity(EntityType originEntity) {
-    this.originEntity = originEntity;
   }
 
   Long getPostCodeId() {

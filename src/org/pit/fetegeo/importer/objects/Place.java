@@ -16,6 +16,7 @@ public class Place extends GenericTag {
 
   private Long population;
   private Long countryId;
+  private Integer adminLevel;
   private static Long placeId = 0l;
   private static Long placeNameId = 0l;
 
@@ -27,7 +28,7 @@ public class Place extends GenericTag {
     placeWriter = FetegeoImportTask.container.add(new CleverWriter(new File(Constants.OUT_PATH, "place.txt")));
   }
 
-  Long getPopulation() {
+  private Long getPopulation() {
     return population;
   }
 
@@ -35,7 +36,7 @@ public class Place extends GenericTag {
     this.population = population;
   }
 
-  Long getCountryId() {
+  private Long getCountryId() {
     return countryId;
   }
 
@@ -43,12 +44,21 @@ public class Place extends GenericTag {
     this.countryId = countryId;
   }
 
+  public void setAdminLevel(Integer adminLevel) {
+    this.adminLevel = adminLevel;
+  }
+
+  private Integer getAdminLevel() {
+    return adminLevel;
+  }
+
   public void write() {
     placeWriter.writeField(placeId);                                                 // place_id
     super.write(placeWriter);                                                        // OSM_ID, TYPE_ID
-    placeWriter.writeField(LocationProcessor.findLocation());                    // location
     placeWriter.writeField(this.getPostCodeId());                                    // postcode_id
     placeWriter.writeField(this.getCountryId());                                     // country_id
+    placeWriter.writeField(LocationProcessor.findLocation());                        // location
+    placeWriter.writeField(this.getAdminLevel());                                    // admin_level
     placeWriter.writeField(this.getPopulation());                                    // population
 
     for (Name name : this.getNameList()) {

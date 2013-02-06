@@ -24,4 +24,12 @@ public class CleverWriter extends CopyFileWriter {
       super.writeField(l);
     }
   }
+
+  public void writeField(Integer i) {
+    if (i == null) {
+      super.writeField(Constants.NULL_STRING);
+    } else {
+      super.writeField(i);
+    }
+  }
 }

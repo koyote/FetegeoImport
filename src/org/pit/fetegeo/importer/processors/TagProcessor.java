@@ -3,7 +3,10 @@ package org.pit.fetegeo.importer.processors;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
-import org.pit.fetegeo.importer.objects.*;
+import org.pit.fetegeo.importer.objects.GenericTag;
+import org.pit.fetegeo.importer.objects.Name;
+import org.pit.fetegeo.importer.objects.Place;
+import org.pit.fetegeo.importer.objects.PostalCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,9 @@ public class TagProcessor {
     return tags;
   }
 
+  /*
+    Method adds a new type to out type map.
+   */
   private void addToTypeList(String type) {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     if (!typeMap.containsKey(type)) {
@@ -54,11 +60,12 @@ public class TagProcessor {
     boolean isCountry = false, isBoundary = false;
 
     place.setId(entity.getId());
-    place.setOriginEntity(entity.getType());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
+
+      // Set the place type
       if (key.equalsIgnoreCase("place")) {
         if (place.getType() == null || place.getType().isEmpty()) { // don't overwrite boundary type
           place.setType(value);
@@ -66,35 +73,56 @@ public class TagProcessor {
             isCountry = true;
           }
         }
-      } else if (key.equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
+      }
+
+      // Set boundary
+      else if (key.equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative")) {
         place.setType("boundary");
-      } else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
+      }
+
+      // Set name
+      else if (key.startsWith("name:") || key.endsWith("name") || key.equalsIgnoreCase("place_name")) {
         nameList.add(new Name(value, key));
-      } else if (key.equalsIgnoreCase("population")) {
+      }
+
+      // Set population
+      else if (key.equalsIgnoreCase("population")) {
         try {
-          place.setPopulation(Long.valueOf(value));
+          place.setPopulation(Long.valueOf(value.trim()));
         }
-        // Some population numbers are given as '#### (YYYY)'...
+        // Some population numbers are given as '#### (YYYY)' or '~####'...
         catch (NumberFormatException nfe) {
-          value = value.replaceAll("\\([^\\(]*\\)", "");
+          System.err.println("Bad population at Entity: " + entity.getId() + " population " + value + ". Trying to extract number...");
+          value = value.replaceAll("\\([^\\(]*\\)|[^\\d]", "").trim();
           try {
             place.setPopulation(Long.valueOf(value));
           } catch (NumberFormatException nfe2) {
-            // Not a number?
+            System.err.println("Could not extract number from " + value);
           }
         }
-      } else if (key.equalsIgnoreCase("postal_code")) {
+      }
+
+      // Look for postcodes
+      else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag, place);
       }
 
-      // find the boundaries of a country. Not all admin_level=2 relations are countries though.
-      else if (key.equalsIgnoreCase("admin_level") && value.equalsIgnoreCase("2")) {
-        if (entity.getType().equals(EntityType.Relation)) {
-          isBoundary = true;
+      // Set the admin Level
+      else if (key.equalsIgnoreCase("admin_level")) {
+        try {
+          Integer adminLevel = Integer.valueOf(value);
+          place.setAdminLevel(adminLevel);
+          // find the boundaries of a country. Not all admin_level=2 relations are countries though.
+          if (adminLevel == 2) {
+            if (entity.getType().equals(EntityType.Relation)) {
+              isBoundary = true;
+            }
+          }
+        } catch (NumberFormatException nfe) {
+          System.err.println("Bad admin level at Entity: " + entity.getId() + " admin level: " + value);
         }
       }
     }
-
 
     place.setNameList(nameList);
 
@@ -125,7 +153,6 @@ public class TagProcessor {
     String key, value;
 
     highway.setId(entity.getId());
-    highway.setOriginEntity(entity.getType());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -171,7 +198,6 @@ public class TagProcessor {
 
       postalCode.setId(entity.getId());
       postalCode.setType(entity.getType().toString());
-      postalCode.setOriginEntity(entity.getType());
       tags.add(postalCode);
       genericTag.setPostCodeId(postalCode.getPostCodeId());
 

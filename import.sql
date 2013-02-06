@@ -5,9 +5,10 @@ CREATE TABLE place (
   place_id bigserial,
   osm_id bigint,
   type_id bigint,
-  location geometry,
   postcode_id bigint,
   country_id bigint,
+  location geometry,
+  admin_level int,
   population bigint
 );
 
@@ -120,12 +121,10 @@ WHERE p2.country_id IS NOT NULL AND ST_Covers(p2.location, place.location);
 UPDATE place
 SET area = ST_Area(location);
 CREATE INDEX place_area_idx ON place(area);
-UPDATE postcode
-SET area = ST_Area(location);
-CREATE INDEX postcode_area_idx ON postcode(area);
 
 ---- Update place's parents
--- For some reason, the scheduler makes ST_Area+area nearly twice as fast as opposed to having 'WHERE big.area = MIN(b2.area)'...
+-- For some reason, the planner makes ST_Area+area nearly twice as fast as opposed to having 'WHERE big.area = MIN(b2.area)'...
+-- Also, running a VACUUM ANALYZE just before this query eliminates any speed gain.
 UPDATE place
 SET parent_id = b_id
 FROM (
@@ -134,9 +133,9 @@ FROM (
   WHERE ST_Area(big.location) = (
 	  SELECT MIN(b2.area)
 	  FROM place as b2
-	  WHERE NOT ST_Equals(small.location, b2.location)
-	  AND ST_Covers(b2.location, small.location)
-	  AND (ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon'))
+	  WHERE ST_Covers(b2.location, small.location)
+	  AND NOT ST_Equals(b2.location, small.location)
+	  AND ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon')
 	  )
 ) pp
 WHERE place_id = s_id;
@@ -147,12 +146,12 @@ SET parent_id = b_id
 FROM (
   SELECT small.postcode_id as s_id, big.place_id as b_id
   FROM postcode as small, place as big
-  WHERE ST_Area(big.location)= (
+  WHERE big.area = (
 	  SELECT MIN(b2.area)
 	  FROM place as b2
-	  WHERE NOT ST_Equals(small.location, b2.location)
-	  AND ST_Covers(b2.location, small.location)
-	  AND (ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon'))
+	  WHERE ST_Covers(b2.location, small.location)
+	  AND NOT ST_Equals(b2.location, small.location)
+	  AND ST_GeometryType(b2.location) IN ('ST_Polygon', 'ST_MultiPolygon')
 	  )
 ) pp
 WHERE postcode_id = s_id;
