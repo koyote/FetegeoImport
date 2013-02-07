@@ -177,32 +177,33 @@ public class TagProcessor {
     tags.add(highway);
   }
 
-  // We allow for duplicate postcodes so that we can then store all locations for a given post_code (and combine the area using PostGIS)
   private void processPostalCode(Entity entity, Tag tag, GenericTag genericTag) {
-    String[] values = tag.getValue().split(",|;"); // sometimes we have more than one postcode separated by a comma or semi-colon
+    String code = tag.getValue().trim();  // trim whitespace as some postcodes are badly formatted
+    PostalCode postalCode;
 
-    for (String code : values) {
-      code = code.trim();  // trim whitespace as some postcodes are badly formatted
-      PostalCode postalCode;
-
-      // Check if the postcode is a multi-postcode (some countries use dashes, others use spaces to separate them)
-      if (spacePcPattern.matcher(code).matches()) {
-        String[] multiPC = code.split(" ");
-        postalCode = new PostalCode(multiPC[0], multiPC[1]);
-      } else if (dashPcPattern.matcher(code).matches()) {
-        String[] multiPC = code.split("-");
-        postalCode = new PostalCode(multiPC[0], multiPC[1]);
-      } else {
-        postalCode = new PostalCode(code);
-      }
-
-      postalCode.setId(entity.getId());
-      postalCode.setType(entity.getType().toString());
-      tags.add(postalCode);
-      genericTag.setPostCodeId(postalCode.getPostCodeId());
-
-      addToTypeList(postalCode.getType());
+    // sometimes we have more than one postcode separated by a comma or semi-colon. We don't care about those
+    if (code.matches(",|;")) {
+      return;
     }
+
+    // Check if the postcode is a multi-postcode (some countries use dashes, others use spaces to separate them)
+    if (spacePcPattern.matcher(code).matches()) {
+      String[] multiPC = code.split(" ");
+      postalCode = new PostalCode(multiPC[0], multiPC[1]);
+    } else if (dashPcPattern.matcher(code).matches()) {
+      String[] multiPC = code.split("-");
+      postalCode = new PostalCode(multiPC[0], multiPC[1]);
+    } else {
+      postalCode = new PostalCode(code);
+    }
+
+    postalCode.setId(entity.getId());
+    postalCode.setType(entity.getType().toString());
+    tags.add(postalCode);
+    genericTag.setPostCodeId(postalCode.getPostCodeId());
+
+    addToTypeList(postalCode.getType());
+
   }
 
 }

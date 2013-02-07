@@ -97,7 +97,7 @@ UPDATE postcode
 SET location = ST_CollectionHomogenize(location);
 
 ---- Get rid of invalid locations
---(TODO: maybe run Buffer or MakeValid on these)
+--TODO: maybe run Buffer or MakeValid on these
 UPDATE place
 SET location = null
 WHERE NOT ST_IsValid(location);
