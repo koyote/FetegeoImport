@@ -5,11 +5,11 @@ CREATE TABLE place (
   place_id bigserial,
   osm_id bigint,
   type_id bigint,
-  postcode_id bigint,
   country_id bigint,
   location geometry,
   admin_level int,
-  population bigint
+  population bigint,
+  parent_id bigint
 );
 
 DROP TABLE place_name CASCADE;
@@ -37,7 +37,9 @@ CREATE TABLE postcode (
  type_id bigint,
  location geometry,
  main text,
- sup text
+ sup text,
+ country_id bigint,
+ parent_id bigint
 );
 
 DROP TABLE type CASCADE;

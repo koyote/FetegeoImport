@@ -55,11 +55,11 @@ public class Place extends GenericTag {
   public void write() {
     placeWriter.writeField(placeId);                                                 // place_id
     super.write(placeWriter);                                                        // OSM_ID, TYPE_ID
-    placeWriter.writeField(this.getPostCodeId());                                    // postcode_id
     placeWriter.writeField(this.getCountryId());                                     // country_id
     placeWriter.writeField(LocationProcessor.findLocation());                        // location
     placeWriter.writeField(this.getAdminLevel());                                    // admin_level
     placeWriter.writeField(this.getPopulation());                                    // population
+    placeWriter.writeField(Constants.NULL_STRING);                                   // parent_id
 
     for (Name name : this.getNameList()) {
       placeNameWriter.writeField(placeNameId++);                                          // place_name_id

@@ -51,6 +51,8 @@ public class PostalCode extends GenericTag {
     postCodeWriter.writeField(LocationProcessor.findLocation());     // location
     postCodeWriter.writeField(main);                                 // main
     postCodeWriter.writeField(sup);                                  // sup;
+    postCodeWriter.writeField(Constants.NULL_STRING);                // country_id
+    postCodeWriter.writeField(Constants.NULL_STRING);                // parent_id
     postCodeWriter.endRecord();
   }
 }

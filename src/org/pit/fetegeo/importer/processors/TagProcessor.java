@@ -200,7 +200,6 @@ public class TagProcessor {
     postalCode.setId(entity.getId());
     postalCode.setType(entity.getType().toString());
     tags.add(postalCode);
-    genericTag.setPostCodeId(postalCode.getPostCodeId());
 
     addToTypeList(postalCode.getType());
 

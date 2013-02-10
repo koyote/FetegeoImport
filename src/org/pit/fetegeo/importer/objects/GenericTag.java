@@ -17,7 +17,6 @@ public abstract class GenericTag {
   private Long id;
   private String type;
   private List<Name> nameList;
-  private Long postCodeId;
   private static final Map<String, Long> typeMap;
 
   static {
@@ -46,14 +45,6 @@ public abstract class GenericTag {
 
   public void setNameList(List<Name> nameList) {
     this.nameList = nameList;
-  }
-
-  Long getPostCodeId() {
-    return postCodeId;
-  }
-
-  public void setPostCodeId(Long postCodeId) {
-    this.postCodeId = postCodeId;
   }
 
   public static Map<String, Long> getTypeMap() {
