@@ -40,7 +40,7 @@ public class CountryCodeProcessor {
   private void fetchAndSaveCountries() throws IOException {
     URL url = new URL(Constants.COUNTRY_ISO_CODE_URL);
     InputStream inputStream = url.openStream();
-    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "ISO-8859-1"));
 
     long countryId = 0l;
     String line, name, iso3166_2, iso3166_3;

@@ -43,7 +43,7 @@ public class LanguageProcessor {
   private void fetchAndSaveLangs() throws IOException {
     URL url = new URL(Constants.LANG_ISO_CODE_URL);
     InputStream inputStream = url.openStream();
-    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "ISO-8859-1"));
 
     long langId = 0l;
     String line, name, iso639_1, iso639_2;
