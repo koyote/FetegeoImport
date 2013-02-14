@@ -14,6 +14,9 @@ import java.util.Map;
  * Author: Pit Apps
  * Date: 21/11/12
  * Time: 15:11
+ * <p/>
+ * Needs fetchAndSaveCountries() to be run before usage.
+ * Fills up a Map linking a country by name to its id in the database.
  */
 public class CountryCodeProcessor {
 
@@ -29,7 +32,7 @@ public class CountryCodeProcessor {
     try {
       fetchAndSaveCountries();
     } catch (IOException ioe) {
-      System.out.print(ioe);
+      System.err.print(ioe);
     }
   }
 
@@ -69,6 +72,7 @@ public class CountryCodeProcessor {
       } else {
         countryCodeWriter.writeField(Constants.NULL_STRING);
       }
+
       countryCodeMap.put(name, countryId);
       countryCodeWriter.writeField(name);
 
@@ -81,7 +85,7 @@ public class CountryCodeProcessor {
   }
 
   /*
-   Returns the database id of a specified ISO country code
+   Returns the database id of a specified country by name (in English)
   */
   public static Long findCountryId(String country) {
     return countryCodeMap.get(country);

@@ -70,6 +70,9 @@ public class FetegeoImportTask implements Sink {
     locationProcessor.completeAndRelease();
   }
 
+  /*
+   When we're done with processing the XML file, we write all the different tag types to file.
+   */
   private void writeTypes() {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
     for (String type : typeMap.keySet()) {

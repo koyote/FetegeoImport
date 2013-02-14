@@ -17,6 +17,9 @@ import java.util.Map;
  * Author: Pit Apps
  * Date: 10/26/12
  * Time: 3:43 PM
+ * <p/>
+ * Handles all processing of locations found in the Nodes, Ways and Relations.
+ * This uses file-based cache for Nodes and Ways and relies on memory-based cache for Relations.
  */
 public class LocationProcessor {
 
@@ -34,7 +37,7 @@ public class LocationProcessor {
   private static IndexStore<Long, LongLongIndexElement> wayIDX;
   private static IndexStoreReader<Long, LongLongIndexElement> wayIDXReader;
 
-  private static Map<Long, Geometry> relationMap = new HashMap<Long, Geometry>();
+  private static final Map<Long, Geometry> relationMap = new HashMap<Long, Geometry>();
 
   public LocationProcessor() {
 
@@ -90,6 +93,10 @@ public class LocationProcessor {
     return currentLocation;
   }
 
+  /*
+    All we need from a Node is latitude and longitude.
+    Using a CleverPoint will save this as a Point that is writable to a file-cache.
+   */
   private Geometry process(Node node) {
     CleverPoint cp = new CleverPoint(node.getLatitude(), node.getLongitude());
     nodeIDX.write(new LongLongIndexElement(node.getId(), nodeOS.add(cp)));
@@ -98,6 +105,7 @@ public class LocationProcessor {
   }
 
   private static Geometry process(Way way) {
+    // Make sure the Node cache has transitioned from write to read mode
     if (nodeReader == null) {
       nodeOS.complete();
       nodeReader = nodeOS.createReader();
@@ -110,6 +118,7 @@ public class LocationProcessor {
     List<WayNode> wayNodes = way.getWayNodes();
     Point[] points = new Point[wayNodes.size()];
 
+    // Collect all Nodes contained in the Way from the file-cache and put into a Point array
     for (int i = 0; i < points.length; i++) {
       try {
         points[i] = nodeReader.get(nodeIDXReader.get(wayNodes.get(i).getNodeId()).getValue());
@@ -127,12 +136,16 @@ public class LocationProcessor {
     } else {
       result = new LineString(points);
     }
-    result.setSrid(4326);
+    result.setSrid(4326); // needed for coordinates
 
     return result;
   }
 
+  /*
+    Relations can contain Nodes, Ways or other Relations and are therefore more complex to process
+   */
   private static Geometry process(Relation relation) {
+    // Make sure the Way cache has transitioned from write to read mode
     if (wayReader == null) {
       wayOS.complete();
       wayReader = wayOS.createReader();
@@ -145,23 +158,30 @@ public class LocationProcessor {
     List<Geometry> coordinateList = fetchRelationCoors(relation);
 
     // If we could not find all the coordinates, we return null!
+    // An empty location field in the DB is better than a corrupted one.
     if (coordinateList == null) {
       return null;
     }
 
+    // We're adding to hodgepodge of Geometries into a collection.
+    // PostGIS can deal with homogenising this during the import.
     GeometryCollection result = new GeometryCollection(coordinateList.toArray(new Geometry[coordinateList.size()]));
-    result.setSrid(4326);
+    result.setSrid(4326);  // needed for coordinates
 
     relationMap.put(relation.getId(), result);
 
     return result;
   }
 
+  /*
+    Used by the Relation process method to parse all the Nodes, Ways and Relations contained within a Relation.
+    Ways and Relations are then decomposed into their respective Geometries and added to a List which is later returned.
+   */
   private static List<Geometry> fetchRelationCoors(Relation relation) {
     List<Geometry> coordinateList = new ArrayList<Geometry>();
     for (RelationMember relationMember : relation.getMembers()) {
 
-      // only care about outer roles. Some ways are not tagged...
+      // only care about outer roles. (Some ways are not tagged, so we'll include these as well...)
       if (!relationMember.getMemberRole().equalsIgnoreCase("outer") && !relationMember.getMemberRole().isEmpty()) {
         continue;
       }
@@ -213,16 +233,9 @@ public class LocationProcessor {
     return coordinateList;
   }
 
-  private List<Geometry> cleanList(List<Geometry> list, int type) {
-    List<Geometry> cleanedList = new ArrayList<Geometry>();
-    for (Geometry g : list) {
-      if (g.getType() == type) {
-        cleanedList.add(g);
-      }
-    }
-    return cleanedList;
-  }
-
+  /*
+    Cleanup all the mess we made up there.
+   */
   public void completeAndRelease() {
     storeContainer.complete();
     storeContainer.release();

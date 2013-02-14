@@ -9,6 +9,9 @@ import java.io.File;
  * Author: Pit Apps
  * Date: 10/31/12
  * Time: 6:04 PM
+ * <p/>
+ * This class is essentially CopyFileWriter with extra methods for handling Long and Integer classes.
+ * These are not handled properly by the default CopyFileWriter (when they are null).
  */
 public class CleverWriter extends CopyFileWriter {
 

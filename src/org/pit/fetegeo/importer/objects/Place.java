@@ -11,6 +11,8 @@ import java.io.File;
  * Author: Pit Apps
  * Date: 10/25/12
  * Time: 5:37 PM
+ * <p/>
+ * Stores all data relevant to a Place.
  */
 public class Place extends GenericTag {
 

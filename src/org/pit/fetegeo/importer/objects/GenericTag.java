@@ -1,6 +1,5 @@
 package org.pit.fetegeo.importer.objects;
 
-import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.pit.fetegeo.importer.processors.CleverWriter;
 
 import java.util.HashMap;
@@ -11,24 +10,23 @@ import java.util.Map;
  * Author: Pit Apps
  * Date: 10/26/12
  * Time: 4:03 PM
+ * <p/>
+ * The GenericTag class acts as parent to all other Tags and stores common
+ * information such as osmID, type and a list of names.
  */
 public abstract class GenericTag {
 
-  private Long id;
+  private Long osmId;
   private String type;
-  private List<Name> nameList;
   private static final Map<String, Long> typeMap;
+  private List<Name> nameList;
 
   static {
     typeMap = new HashMap<String, Long>();
   }
 
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
+  public void setOsmId(Long osmId) {
+    this.osmId = osmId;
   }
 
   public String getType() {
@@ -51,11 +49,17 @@ public abstract class GenericTag {
     return typeMap;
   }
 
-  public abstract void write();
-
+  /*
+    Writes fields common to all Tags such as osmID and typeID
+   */
   void write(CleverWriter copyFileWriter) {
-    copyFileWriter.writeField(this.getId());                  // write OSM_ID
+    copyFileWriter.writeField(osmId);                         // write OSM_ID
     copyFileWriter.writeField(typeMap.get(this.getType()));   // write TYPE_ID
   }
+
+  /*
+    To be implemented by all children in order to write Tag-specific fields
+   */
+  public abstract void write();
 
 }

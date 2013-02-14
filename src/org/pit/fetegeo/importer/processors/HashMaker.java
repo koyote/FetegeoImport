@@ -1,7 +1,5 @@
 package org.pit.fetegeo.importer.processors;
 
-import org.pit.fetegeo.importer.objects.Constants;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -9,6 +7,8 @@ import java.security.NoSuchAlgorithmException;
  * Author: Pit Apps
  * Date: 19/11/12
  * Time: 23:52
+ * <p/>
+ * Creates an MD5 hash digest of a given String.
  */
 public class HashMaker {
   private static MessageDigest md;

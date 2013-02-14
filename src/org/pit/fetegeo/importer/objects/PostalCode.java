@@ -10,6 +10,8 @@ import java.io.File;
  * Author: Pit Apps
  * Date: 10/31/12
  * Time: 5:09 PM
+ * <p/>
+ * Stores all data relevant to a PostalCode
  */
 public class PostalCode extends GenericTag {
 
@@ -25,6 +27,7 @@ public class PostalCode extends GenericTag {
 
   /*
     Constructor for single postcode
+    Automatically increases the ID for each instance.
    */
   public PostalCode(String postCode) {
     this.main = postCode;
@@ -39,10 +42,6 @@ public class PostalCode extends GenericTag {
     this.main = main;
     this.sup = sup;
     postCodeId++;
-  }
-
-  public Long getPostCodeId() {
-    return postCodeId;
   }
 
   public void write() {

@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
  * Author: Pit Apps
  * Date: 10/26/12
  * Time: 3:48 PM
+ * <p/>
+ * Processes all Tags relating to a Node, Way or Relation.
+ * Extracts any relevant data and returns a list of Tags.
  */
 public class TagProcessor {
 
@@ -31,10 +34,14 @@ public class TagProcessor {
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
+
+      // Is this a place?
       if (key.equalsIgnoreCase("place") || (key.equalsIgnoreCase("boundary") && value.equalsIgnoreCase("administrative"))) {
         processPlace(entity);
         break;
-      } else if (key.equalsIgnoreCase("highway")) {
+      }
+      // Maybe it's a highway!
+      else if (key.equalsIgnoreCase("highway")) {
         // TODO: limit this to only a couple values?
         processHighway(entity);
         break;
@@ -44,7 +51,7 @@ public class TagProcessor {
   }
 
   /*
-    Method adds a new type to out type map.
+    Method adds a new type to the type map.
    */
   private void addToTypeList(String type) {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
@@ -53,13 +60,17 @@ public class TagProcessor {
     }
   }
 
+  /*
+    If the entity is a place, we extract all information that could be useful and put it into a Place object
+    so that we can write it to file later.
+   */
   private void processPlace(Entity entity) {
     Place place = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
     boolean isCountry = false, isBoundary = false;
 
-    place.setId(entity.getId());
+    place.setOsmId(entity.getId());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -86,12 +97,13 @@ public class TagProcessor {
       }
 
       // Set population
+      // Some population numbers are given as '#### (YYYY)' or '~####'...
+      // So we'll have to do an ugly try catch block to find out if we're dealing with an actual number.
+      // We also print out the error so that it can hopefully be corrected in the OSM data.
       else if (key.equalsIgnoreCase("population")) {
         try {
           place.setPopulation(Long.valueOf(value.trim()));
-        }
-        // Some population numbers are given as '#### (YYYY)' or '~####'...
-        catch (NumberFormatException nfe) {
+        } catch (NumberFormatException nfe) {
           System.err.println("Bad population at Entity: " + entity.getId() + " population " + value + ". Trying to extract number...");
           value = value.replaceAll("\\([^\\(]*\\)|[^\\d]", "").trim();
           try {
@@ -104,7 +116,7 @@ public class TagProcessor {
 
       // Look for postcodes
       else if (key.equalsIgnoreCase("postal_code")) {
-        processPostalCode(entity, tag, place);
+        processPostalCode(entity, tag);
       }
 
       // Set the admin Level
@@ -147,12 +159,16 @@ public class TagProcessor {
     tags.add(place);
   }
 
+  /*
+    Extract highways from our Tags.
+    We only really need the name and a postal_code if the road is linked to one.
+   */
   private void processHighway(Entity entity) {
     Place highway = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
 
-    highway.setId(entity.getId());
+    highway.setOsmId(entity.getId());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
@@ -162,7 +178,7 @@ public class TagProcessor {
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("postal_code")) {
-        processPostalCode(entity, tag, highway);
+        processPostalCode(entity, tag);
       }
     }
 
@@ -177,11 +193,15 @@ public class TagProcessor {
     tags.add(highway);
   }
 
-  private void processPostalCode(Entity entity, Tag tag, GenericTag genericTag) {
+  /*
+    If we found a postal_code tag above, we come here to work out what kind of post code we're dealing with.
+   */
+  private void processPostalCode(Entity entity, Tag tag) {
     String code = tag.getValue().trim();  // trim whitespace as some postcodes are badly formatted
     PostalCode postalCode;
 
-    // sometimes we have more than one postcode separated by a comma or semi-colon. We don't care about those
+    // sometimes we have more than one postcode separated by a comma or semi-colon.
+    // We don't care about those as it means the data is imprecise (where on the road does one postcode start and where does it end?)
     if (code.matches(",|;")) {
       return;
     }
@@ -197,7 +217,7 @@ public class TagProcessor {
       postalCode = new PostalCode(code);
     }
 
-    postalCode.setId(entity.getId());
+    postalCode.setOsmId(entity.getId());
     postalCode.setType(entity.getType().toString());
     tags.add(postalCode);
 

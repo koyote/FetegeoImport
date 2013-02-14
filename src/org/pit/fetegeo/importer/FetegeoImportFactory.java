@@ -25,7 +25,7 @@ public class FetegeoImportFactory extends TaskManagerFactory {
     File outDir = new File(outDirName);
 
     if (!outDir.isDirectory()) {
-      throw new IllegalArgumentException(outDirName + " is not a directory or does not exist");
+      throw new IllegalArgumentException(outDirName + " is not a directory or does not exist.");
     }
 
     FetegeoImportTask task = new FetegeoImportTask(outDir);

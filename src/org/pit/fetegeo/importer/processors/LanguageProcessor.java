@@ -14,6 +14,9 @@ import java.util.*;
  * Author: Pit Apps
  * Date: 10/28/12
  * Time: 3:26 PM
+ * <p/>
+ * Handles fetching language ISO data from the internet and saving it to a postgres import file
+ * as well as storing the id to a map.
  */
 public class LanguageProcessor {
 
@@ -37,8 +40,7 @@ public class LanguageProcessor {
 
   /*
     This method finds language codes from LANG_ISO_CODE_URL, parses them and then adds them to
-     the langMap and lang.txt file for subsequent database copy.
-     TODO: if more than one code for a language, merge it somehow
+     the langMap and languageList.
    */
   private void fetchAndSaveLangs() throws IOException {
     URL url = new URL(Constants.LANG_ISO_CODE_URL);
@@ -83,6 +85,10 @@ public class LanguageProcessor {
 
   /*
     Returns the database id of a specified ISO language code
+
+    Also adds the id to a Set. This is so that we can keep track of which languages are actually used
+    during the import. There's no need to catalogue 500 obscure languages when only a small percentage of these
+    are actually referenced. This is especially true for a web interface that displays a list of all available languages.
    */
   public static Long findLanguageId(String code) {
     Long id = langMap.get(code);
@@ -90,6 +96,9 @@ public class LanguageProcessor {
     return id;
   }
 
+  /*
+    Only write languages that have been referenced to file.
+   */
   public void write() {
     for (Language l : languageList) {
       if (saveSet.contains(l.getId())) {

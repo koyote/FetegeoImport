@@ -4,13 +4,15 @@ package org.pit.fetegeo.importer.objects;
  * Author: Pit Apps
  * Date: 13/02/13
  * Time: 23:46
+ * <p/>
+ * This class stores a language together with its ISO codes and name
  */
 public class Language {
 
-  private Long id;
+  private final Long id;
   private String iso639_1;
   private String iso639_2;
-  private String name;
+  private final String name;
 
   public Language(Long id, String name) {
     this.id = id;
