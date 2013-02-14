@@ -20,6 +20,7 @@ import java.util.Map;
 public class FetegeoImportTask implements Sink {
 
   private final LocationProcessor locationProcessor;
+  private final LanguageProcessor languageProcessor;
   private final TagProcessor tagProcessor;
   private final CleverWriter typeWriter;
 
@@ -30,8 +31,8 @@ public class FetegeoImportTask implements Sink {
     Constants.OUT_PATH = outDir;
     System.out.println("The Output directory is: " + Constants.OUT_PATH.getAbsolutePath());
 
-    new LanguageProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "lang.txt"))));
     new CountryCodeProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "country.txt"))));
+    languageProcessor = new LanguageProcessor(container.add(new CleverWriter(new File(Constants.OUT_PATH, "lang.txt"))));
 
     locationProcessor = new LocationProcessor();
     tagProcessor = new TagProcessor();
@@ -59,6 +60,7 @@ public class FetegeoImportTask implements Sink {
   @Override
   public void complete() {
     writeTypes();
+    languageProcessor.write();
     container.complete();
   }
 

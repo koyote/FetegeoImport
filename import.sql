@@ -65,10 +65,7 @@ CREATE TABLE country (
 \copy country FROM 'country.txt'
 
 ---- Add some special columns which take data from PostGIS calculations later in this script
-ALTER TABLE postcode ADD COLUMN country_id bigint;
-ALTER TABLE postcode ADD COLUMN parent_id bigint;
 ALTER TABLE postcode ADD COLUMN area float;
-ALTER TABLE place ADD COLUMN parent_id bigint;
 ALTER TABLE place ADD COLUMN area float;
 
 ---- Create some indices

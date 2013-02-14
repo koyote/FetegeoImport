@@ -1,14 +1,14 @@
 package org.pit.fetegeo.importer.processors;
 
 import org.pit.fetegeo.importer.objects.Constants;
+import org.pit.fetegeo.importer.objects.Language;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Author: Pit Apps
@@ -18,6 +18,8 @@ import java.util.Map;
 public class LanguageProcessor {
 
   private final static Map<String, Long> langMap = new HashMap<String, Long>();
+  private final static Set<Long> saveSet = new HashSet<Long>();
+  private final static List<Language> languageList = new ArrayList<Language>();
   private final CleverWriter langWriter;
 
   /*
@@ -57,25 +59,21 @@ public class LanguageProcessor {
       iso639_2 = tokens[1].trim().toUpperCase();
       name = tokens[2].trim();
 
-      langWriter.writeField(langId);
+      Language language = new Language(langId, name);
 
       if (!iso639_1.isEmpty()) {
-        langWriter.writeField(iso639_1);
+        iso639_1 = iso639_1.substring(0, 2);
+        language.setIso639_1(iso639_1);
         langMap.put(iso639_1, langId);
-      } else {
-        langWriter.writeField(Constants.NULL_STRING);
       }
 
       if (!iso639_2.isEmpty()) {
         iso639_2 = iso639_2.substring(0, 3); // cut off B and T
-        langWriter.writeField(iso639_2);
+        language.setIso639_2(iso639_2);
         langMap.put(iso639_2, langId);
-      } else {
-        langWriter.writeField(Constants.NULL_STRING);
       }
 
-      langWriter.writeField(name);
-      langWriter.endRecord();
+      languageList.add(language);
       langId++;
     }
 
@@ -87,7 +85,20 @@ public class LanguageProcessor {
     Returns the database id of a specified ISO language code
    */
   public static Long findLanguageId(String code) {
-    return langMap.get(code);
+    Long id = langMap.get(code);
+    saveSet.add(id);
+    return id;
   }
 
+  public void write() {
+    for (Language l : languageList) {
+      if (saveSet.contains(l.getId())) {
+        langWriter.writeField(l.getId());
+        langWriter.writeField(l.getIso639_1());
+        langWriter.writeField(l.getIso639_2());
+        langWriter.writeField(l.getName());
+        langWriter.endRecord();
+      }
+    }
+  }
 }
