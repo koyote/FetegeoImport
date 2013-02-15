@@ -14,7 +14,7 @@ import org.postgis.Point;
  * This class is essentially Point but implements Storeable so that it can be cached in a file.
  * This is used for storing Node objects without having to store all other data associated with a Node.
  */
-class CleverPoint extends Point implements Storeable {
+public class CleverPoint extends Point implements Storeable {
 
   public CleverPoint(double x, double y) {
     super(x, y);

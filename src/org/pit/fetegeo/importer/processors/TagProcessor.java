@@ -9,6 +9,7 @@ import org.pit.fetegeo.importer.objects.Place;
 import org.pit.fetegeo.importer.objects.PostalCode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -24,8 +25,13 @@ import java.util.regex.Pattern;
 public class TagProcessor {
 
   private List<GenericTag> tags;
-  private static final Pattern spacePcPattern = Pattern.compile("\\w+ \\w+");
-  private static final Pattern dashPcPattern = Pattern.compile("\\w+-\\w+");
+  private static final Pattern SPACE_PC_PATTERN = Pattern.compile("\\w+ \\w+");
+  private static final Pattern DASH_PC_PATTERN = Pattern.compile("\\w+-\\w+");
+
+  // We will only save highways tagged as any of the following.
+  // We really don't care about pedestrian zones and roundabouts p.ex.
+  private static final List<String> HIGHWAYS = Arrays.asList("motorway", "trunk", "primary", "secondary", "tertiary", "living_street", "residential", "road", "unclassified");
+  private static final List<String> NON_HIGHWAY = Arrays.asList("junction", "ice_road", "cycleway");
 
   public List<GenericTag> process(Entity entity) {
     String key, value;
@@ -41,8 +47,7 @@ public class TagProcessor {
         break;
       }
       // Maybe it's a highway!
-      else if (key.equalsIgnoreCase("highway")) {
-        // TODO: limit this to only a couple values?
+      else if (key.equalsIgnoreCase("highway") && HIGHWAYS.contains(value.trim().toLowerCase())) {
         processHighway(entity);
         break;
       }
@@ -55,7 +60,7 @@ public class TagProcessor {
    */
   private void addToTypeList(String type) {
     Map<String, Long> typeMap = GenericTag.getTypeMap();
-    if (!typeMap.containsKey(type)) {
+    if (!typeMap.containsKey(type) && !type.isEmpty()) {
       typeMap.put(type, (long) typeMap.size());
     }
   }
@@ -160,7 +165,7 @@ public class TagProcessor {
   }
 
   /*
-    Extract highways from our Tags.
+    Extract HIGHWAYS from our Tags.
     We only really need the name and a postal_code if the road is linked to one.
    */
   private void processHighway(Entity entity) {
@@ -180,9 +185,13 @@ public class TagProcessor {
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag);
       }
+      // Some highways are roundabouts; which we don't want
+      else if (NON_HIGHWAY.contains(key.trim().toLowerCase())) {
+        return;
+      }
     }
 
-    // We don't want highways without names
+    // We don't want HIGHWAYS without names
     if (nameList.isEmpty()) {
       return;
     }
@@ -207,10 +216,10 @@ public class TagProcessor {
     }
 
     // Check if the postcode is a multi-postcode (some countries use dashes, others use spaces to separate them)
-    if (spacePcPattern.matcher(code).matches()) {
+    if (SPACE_PC_PATTERN.matcher(code).matches()) {
       String[] multiPC = code.split(" ");
       postalCode = new PostalCode(multiPC[0], multiPC[1]);
-    } else if (dashPcPattern.matcher(code).matches()) {
+    } else if (DASH_PC_PATTERN.matcher(code).matches()) {
       String[] multiPC = code.split("-");
       postalCode = new PostalCode(multiPC[0], multiPC[1]);
     } else {
