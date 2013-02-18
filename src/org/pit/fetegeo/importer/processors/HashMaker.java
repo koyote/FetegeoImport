@@ -2,6 +2,7 @@ package org.pit.fetegeo.importer.processors;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
 
 /**
  * Author: Pit Apps
@@ -31,6 +32,16 @@ public class HashMaker {
     }
 
     input = input.trim().toLowerCase(); // The input is trimmed and set to lowercase as fetegeo only handles lowercase
+
+    // We will try and save a hash of a normalised string. I.e. without accents.
+    // This enables us to search for places in the roman alphabet without caring about special accents.
+    // The normaliser will not work on names not based on the roman alphabet.
+    String normalised = Normalizer.normalize(input, Normalizer.Form.NFD);
+    normalised = normalised.replaceAll("[^\\p{ASCII}]", "");
+    if (!normalised.isEmpty()) {
+      input = normalised;
+    }
+
     StringBuilder sb = new StringBuilder();
 
     for (byte b : md.digest(input.getBytes())) {

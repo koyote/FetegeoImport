@@ -61,6 +61,11 @@ public class LanguageProcessor {
       iso639_2 = tokens[1].trim().toUpperCase();
       name = tokens[2].trim();
 
+      // Clean up Names
+      if (name.contains("/")) {
+        name = name.split("/")[0];
+      }
+
       Language language = new Language(langId, name);
 
       if (!iso639_1.isEmpty()) {
