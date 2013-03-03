@@ -130,8 +130,8 @@ public class LocationProcessor {
 
     Geometry result;
 
-    // If points make a circle, we have a polygon. otherwise we have a line
-    if (points.length >= 3 && points[0].equals(points[points.length - 1])) {
+    // If points make a circle, we have a polygon. otherwise we have a line. (min num of points is 4)
+    if (points.length >= 4 && points[0].equals(points[points.length - 1])) {
       result = new Polygon(new LinearRing[]{new LinearRing(points)});
     } else {
       result = new LineString(points);

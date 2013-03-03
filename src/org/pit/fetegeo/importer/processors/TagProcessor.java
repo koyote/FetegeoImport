@@ -109,7 +109,7 @@ public class TagProcessor {
         try {
           place.setPopulation(Long.valueOf(value.trim()));
         } catch (NumberFormatException nfe) {
-          System.err.println("Bad population at Entity: " + entity.getId() + " population " + value + ". Trying to extract number...");
+          System.err.println("Bad population at " + entity.getType().name() + ": " + entity.getId() + " population " + value + ". Trying to extract number...");
           value = value.replaceAll("\\([^\\(]*\\)|[^\\d]", "").trim();
           try {
             place.setPopulation(Long.valueOf(value));
