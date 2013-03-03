@@ -30,8 +30,8 @@ public class TagProcessor {
 
   // We will only save highways tagged as any of the following.
   // We really don't care about pedestrian zones and roundabouts p.ex.
-  private static final List<String> HIGHWAYS = Arrays.asList("motorway", "trunk", "primary", "secondary", "tertiary", "living_street", "residential", "road", "unclassified");
-  private static final List<String> NON_HIGHWAY = Arrays.asList("junction", "ice_road", "cycleway");
+  private static final List<String> ROADS = Arrays.asList("motorway", "trunk", "primary", "secondary", "tertiary", "living_street", "residential", "road", "unclassified");
+  private static final List<String> NON_ROAD = Arrays.asList("junction", "ice_road", "cycleway");
 
   public List<GenericTag> process(Entity entity) {
     String key, value;
@@ -46,9 +46,9 @@ public class TagProcessor {
         processPlace(entity);
         break;
       }
-      // Maybe it's a highway!
-      else if (key.equalsIgnoreCase("highway") && HIGHWAYS.contains(value.trim().toLowerCase())) {
-        processHighway(entity);
+      // Maybe it's a road!
+      else if (key.equalsIgnoreCase("highway") && ROADS.contains(value.trim().toLowerCase())) {
+        processRoad(entity);
         break;
       }
     }
@@ -109,12 +109,13 @@ public class TagProcessor {
         try {
           place.setPopulation(Long.valueOf(value.trim()));
         } catch (NumberFormatException nfe) {
-          System.err.println("Bad population at " + entity.getType().name() + ": " + entity.getId() + " population " + value + ". Trying to extract number...");
+          System.err.println("Bad population tag at " + entity.getType().name() + " " + entity.getId() + ": " + value + ". Trying to extract number...");
           value = value.replaceAll("\\([^\\(]*\\)|[^\\d]", "").trim();
           try {
             place.setPopulation(Long.valueOf(value));
+            System.err.println("Successfully extracted population as: " + value);
           } catch (NumberFormatException nfe2) {
-            System.err.println("Could not extract number from " + value);
+            System.err.println("Could not extract population from: " + value);
           }
         }
       }
@@ -165,41 +166,41 @@ public class TagProcessor {
   }
 
   /*
-    Extract HIGHWAYS from our Tags.
+    Extract ROADS from our Tags.
     We only really need the name and a postal_code if the road is linked to one.
    */
-  private void processHighway(Entity entity) {
-    Place highway = new Place();
+  private void processRoad(Entity entity) {
+    Place road = new Place();
     List<Name> nameList = new ArrayList<Name>();
     String key, value;
 
-    highway.setOsmId(entity.getId());
+    road.setOsmId(entity.getId());
 
     for (Tag tag : entity.getTags()) {
       key = tag.getKey();
       value = tag.getValue();
       if (key.equalsIgnoreCase("highway")) {
-        highway.setType(value);
+        road.setType(value);
       } else if (key.startsWith("name:") || key.endsWith("name")) {
         nameList.add(new Name(value, key));
       } else if (key.equalsIgnoreCase("postal_code")) {
         processPostalCode(entity, tag);
       }
       // Some highways are roundabouts; which we don't want
-      else if (NON_HIGHWAY.contains(key.trim().toLowerCase())) {
+      else if (NON_ROAD.contains(key.trim().toLowerCase())) {
         return;
       }
     }
 
-    // We don't want HIGHWAYS without names
+    // We don't want ROADS without names
     if (nameList.isEmpty()) {
       return;
     }
 
-    highway.setNameList(nameList);
+    road.setNameList(nameList);
 
-    addToTypeList(highway.getType());
-    tags.add(highway);
+    addToTypeList(road.getType());
+    tags.add(road);
   }
 
   /*
