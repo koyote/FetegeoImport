@@ -82,4 +82,9 @@ public class FetegeoImportTask implements Sink {
     }
   }
 
+
+@Override
+public void initialize(Map<String, Object> arg0) {	
+}
+
 }

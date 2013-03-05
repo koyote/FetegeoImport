@@ -62,8 +62,9 @@ public class Place extends GenericTag {
     placeWriter.writeField(this.getAdminLevel());                                    // admin_level
     placeWriter.writeField(this.getPopulation());                                    // population
     placeWriter.writeField(Constants.NULL_STRING);                                   // parent_id
+    placeWriter.writeField(Constants.NULL_STRING);                                   // area
 
-    for (Name name : this.getNameList()) {
+      for (Name name : this.getNameList()) {
       placeNameWriter.writeField(placeNameId++);                                          // place_name_id
       placeNameWriter.writeField(placeId);                                                // place_id
       placeNameWriter.writeField(name.getLanguageId());                                   // lang_id
