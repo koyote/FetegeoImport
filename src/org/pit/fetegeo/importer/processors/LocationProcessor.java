@@ -98,7 +98,7 @@ public class LocationProcessor {
     Using a CleverPoint will save this as a Point that is writable to a file-cache.
    */
   private Geometry process(Node node) {
-    CleverPoint cp = new CleverPoint(node.getLatitude(), node.getLongitude());
+    CleverPoint cp = new CleverPoint(node.getLongitude(), node.getLatitude());
     nodeIDX.write(new LongLongIndexElement(node.getId(), nodeOS.add(cp)));
 
     return cp;
