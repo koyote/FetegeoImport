@@ -30,7 +30,7 @@ public class TagProcessor {
 
   // We will only save highways tagged as any of the following.
   // We really don't care about pedestrian zones and roundabouts p.ex.
-  private static final List<String> ROADS = Arrays.asList("motorway", "trunk", "primary", "secondary", "tertiary", "living_street", "residential", "road", "unclassified");
+  private static final List<String> ROADS = Arrays.asList("motorway", "trunk", "primary", "secondary", "tertiary", "living_street", "residential", "road");
   private static final List<String> NON_ROAD = Arrays.asList("junction", "ice_road", "cycleway");
 
   public List<GenericTag> process(Entity entity) {
