@@ -3,7 +3,7 @@ FetegeoImport
 
 FetegeoImport is a plugin for the OpenStreetMap data processing tool Osmosis.
 It will process any OpenStreetMap data and output PostgreSQL files containing database import statments of the resulting data.
-This data, when imported to a PostGIS enables PostgreSQL database, can be used in conjunction with the Fetegeo geocoder.
+This data, when imported to a PostGIS enabled PostgreSQL database, can be used in conjunction with the Fetegeo geocoder.
 
 ##Requirements:
  - JDK 7
@@ -18,7 +18,7 @@ Getting Osmosis to recognise the new task is detailed here:
 http://wiki.openstreetmap.org/wiki/Osmosis/Detailed_Usage#Plugin_Tasks
 (it basically involves copying the .jar files to the osmosis plugins directory)
 
-##Running
+##Usage
 The plugin is called automatically from the Fetegeo importer.py script.
 
 It can however also be run manually using the 'fimp' or 'fetegeo-import' suffix:
