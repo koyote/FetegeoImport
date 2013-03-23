@@ -62,8 +62,9 @@ public class LanguageProcessor {
       name = tokens[2].trim();
 
       // Clean up Names
-      if (name.contains("/")) {
-        name = name.split("/")[0];
+      int index;
+      if ((index = name.indexOf("/")) != -1) {
+        name = name.substring(0, index);
       }
 
       Language language = new Language(langId, name);
