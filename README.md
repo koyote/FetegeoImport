@@ -10,13 +10,15 @@ This data, when imported to a PostGIS enabled PostgreSQL database, can be used i
  - Osmosis 0.42
 
 ##Installation
-After compiling the sources, osmosis requires a jar file to be built from the resulting classes.
+Compiling the sources manually involves building a jar file from the resulting classes.
 This file must be built including the osmosis-plugins.conf file found at the root.
+Otherwise a pre-compiled .jar file can be found from [here](FetegeoImport.jar).
 
 Getting Osmosis to recognise the new task is detailed here:
 
 http://wiki.openstreetmap.org/wiki/Osmosis/Detailed_Usage#Plugin_Tasks
-(it basically involves copying the .jar files to the osmosis plugins directory)
+
+(it basically involves copying the .jar file to the Osmosis plugins directory)
 
 ##Usage
 The plugin is called automatically from the Fetegeo importer.py script.
